@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gerenciador de Estoque</title>
+  <link rel="stylesheet" href="../estilo/animais.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">Gerenciador de Fazendas</div>
+    <nav aria-label="Navegação principal" style="display:contents">
+      <ul class="menu">
+        <li><a href="../dashboard.html">Menu principal</a></li>
+        <li><a href="animais.html">Animais</a></li>
+        <li><a href="maquinas.html">Máquinas</a></li>
+        <li><a href="estoque.html" class="ativo" aria-current="page">Estoque</a></li>
+        <li><a href="funcionarios.html">Funcionários</a></li>
+        <li><a href="fazenda.html">Fazenda</a></li>
+        <li><a href="utilitarios.html">Utilitários</a></li>
+      </ul>
+    </nav>
+    <div class="usuario"><span class="avatar" aria-hidden="true">L</span><span>Luiz</span></div>
+  </header>
+
+  <main>
+    <h1>Gerenciador de Estoque</h1>
+    <p class="sub">Cadastre e acompanhe os itens do estoque. Quantidades em vermelho estão no mínimo ou abaixo.</p>
+
+    <div class="barra-acoes">
+      <div class="botoes">
+        <button type="button" id="btnCadastrar">Cadastrar</button>
+        <button type="button" id="btnInformacoes">Informações</button>
+        <button type="button" id="btnExcluir">Excluir</button>
+      </div>
+    </div>
+
+    <div class="tabela-area">
+      <table>
+        <thead><tr><th>ID</th><th>Nome</th><th>Categoria</th><th>Unidade</th><th>Quantidade</th><th>Estoque mínimo</th><th>Localização</th></tr></thead>
+        <tbody id="corpoTabela"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <dialog id="modalCadastro">
+    <form id="formCadastro" method="dialog" novalidate>
+      <h2>Cadastrar item</h2>
+      <div class="grade">
+        <div class="campo"><label for="nome">Nome</label><input type="text" id="nome" required></div>
+        <div class="campo"><label for="categoria">Categoria</label>
+          <input type="text" id="categoria" list="categorias" placeholder="Ex.: Ração">
+          <datalist id="categorias"><option value="Ração"><option value="Medicamento"><option value="Combustível"><option value="Insumo"><option value="Ferramenta"></datalist>
+        </div>
+        <div class="campo"><label for="unidade">Unidade</label><select id="unidade"><option>kg</option><option>g</option><option>L</option><option>mL</option><option>un</option><option>saco</option><option>dose</option><option>caixa</option></select></div>
+        <div class="campo"><label for="quantidade">Quantidade</label><input type="number" id="quantidade" min="0" step="0.001" value="0"></div>
+        <div class="campo"><label for="minimo">Estoque mínimo</label><input type="number" id="minimo" min="0" step="0.001" value="0"></div>
+        <div class="campo"><label for="localizacao">Localização</label><input type="text" id="localizacao"></div>
+        <div class="campo largo"><label for="observacoes">Observações</label><textarea id="observacoes" rows="3"></textarea></div>
+      </div>
+      <p class="erro" id="erroCadastro" role="alert" hidden></p>
+      <div class="rodape-modal">
+        <button type="button" class="secundario" data-fechar="modalCadastro">Cancelar</button>
+        <button type="submit">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="modalErro">
+    <h2>Nenhum item selecionado</h2>
+    <p>Clique em uma linha da tabela para selecionar o item e tente de novo.</p>
+    <div class="rodape-modal"><button type="button" data-fechar="modalErro">Entendi</button></div>
+  </dialog>
+
+  <dialog id="modalExcluir">
+    <h2>Excluir item</h2>
+    <p id="textoExcluir"></p>
+    <p class="erro" id="erroExcluir" role="alert" hidden></p>
+    <div class="rodape-modal">
+      <button type="button" class="secundario" data-fechar="modalExcluir">Cancelar</button>
+      <button type="button" class="perigo" id="confirmarExcluir">Excluir</button>
+    </div>
+  </dialog>
+
+  <script src="../scripts/estoque.js"></script>
+</body>
+</html>

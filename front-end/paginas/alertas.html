@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Alertas</title>
+  <link rel="stylesheet" href="../estilo/animais.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">Gerenciador de Fazendas</div>
+    <nav aria-label="Navegação principal" style="display:contents">
+      <ul class="menu">
+        <li><a href="#">Menu principal</a></li>
+        <li><a href="animais.html">Animais</a></li>
+        <li><a href="maquinas.html">Máquinas</a></li>
+        <li><a href="estoque.html">Estoque</a></li>
+        <li><a href="funcionarios.html">Funcionários</a></li>
+        <li><a href="fazenda.html">Fazenda</a></li>
+        <li><a href="utilitarios.html" class="ativo" aria-current="page">Utilitários</a></li>
+      </ul>
+    </nav>
+    <div class="usuario"><span class="avatar" aria-hidden="true">L</span><span>Luiz</span></div>
+  </header>
+
+  <main>
+    <a class="voltar" href="utilitarios.html">Voltar para utilitários</a>
+    <h1>Alertas</h1>
+    <p class="sub">Pendências vencidas ou com vencimento nos próximos 15 dias.</p>
+
+    <section class="secao">
+      <div class="secao-topo"><h2 id="tituloVacinas">Vacinas</h2></div>
+      <div class="tabela-area"><table>
+        <thead><tr><th>Animal</th><th>Vacina</th><th>Próxima dose</th><th>Situação</th></tr></thead>
+        <tbody id="corpoVacinas"></tbody>
+      </table></div>
+    </section>
+
+    <section class="secao">
+      <div class="secao-topo"><h2 id="tituloManutencoes">Manutenções</h2></div>
+      <div class="tabela-area"><table>
+        <thead><tr><th>Máquina</th><th>Última manutenção</th><th>Próxima manutenção</th><th>Situação</th></tr></thead>
+        <tbody id="corpoManutencoes"></tbody>
+      </table></div>
+    </section>
+
+    <section class="secao">
+      <div class="secao-topo"><h2 id="tituloEstoque">Estoque baixo</h2></div>
+      <div class="tabela-area"><table>
+        <thead><tr><th>Item</th><th>Quantidade</th><th>Mínimo</th><th>Localização</th></tr></thead>
+        <tbody id="corpoEstoque"></tbody>
+      </table></div>
+    </section>
+  </main>
+
+  <script src="../scripts/alertas.js"></script>
+</body>
+</html>

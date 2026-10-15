@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Detalhes do funcionário</title>
+  <link rel="stylesheet" href="../estilo/animais-sub.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">Gerenciador de Fazendas</div>
+    <nav aria-label="Navegação principal" style="display:contents">
+      <ul class="menu">
+        <li><a href="../dashboard.html">Menu principal</a></li>
+        <li><a href="animais.html">Animais</a></li>
+        <li><a href="maquinas.html">Máquinas</a></li>
+        <li><a href="estoque.html">Estoque</a></li>
+        <li><a href="funcionarios.html" class="ativo" aria-current="page">Funcionários</a></li>
+        <li><a href="fazenda.html">Fazenda</a></li>
+        <li><a href="utilitarios.html">Utilitários</a></li>
+      </ul>
+    </nav>
+    <div class="usuario"><span class="avatar" aria-hidden="true">L</span><span>Luiz</span></div>
+  </header>
+
+  <main>
+    <a class="voltar" href="funcionarios.html">Voltar para funcionários</a>
+    <h1 id="tituloFuncionario">Carregando...</h1>
+    <p class="sub" id="subFuncionario"></p>
+
+    <section class="secao">
+      <div class="secao-topo"><h2>Dados do funcionário</h2></div>
+      <dl id="dadosFuncionario"></dl>
+    </section>
+
+    <section class="secao">
+      <div class="secao-topo"><h2>Movimentações realizadas</h2></div>
+      <p class="sub" style="margin-bottom:12px">Registros (vacinas, manutenções e movimentações de estoque) em que o campo Responsável tem o nome deste funcionário.</p>
+      <div class="tabela-area"><table>
+        <thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th></tr></thead>
+        <tbody id="corpoMovimentacoes"></tbody>
+      </table></div>
+    </section>
+  </main>
+
+  <script src="../scripts/funcionario.js"></script>
+</body>
+</html>

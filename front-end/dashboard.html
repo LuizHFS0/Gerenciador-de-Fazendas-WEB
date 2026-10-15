@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gerenciador de Fazendas</title>
+    <link rel="stylesheet" href="estilo/style.css">
+</head>
+    <body>
+
+    <header class="topo">
+    <div class="marca">Gerenciador de Fazendas</div>
+    <nav aria-label="Navegação principal" style="display:contents">
+        <ul class="menu">
+        <li><a href="../front-end/dashboard.html" class="ativo" aria-current="page">Menu principal</a></li>
+        <li><a href="./paginas/animais.html">Animais</a></li>
+        <li><a href="./paginas/maquinas.html">Máquinas</a></li>
+        <li><a href="./paginas/estoque.html">Estoque</a></li>
+        <li><a href="./paginas/funcionarios.html">Funcionários</a></li>
+        <li><a href="./paginas/fazenda.html">Fazenda</a></li>
+        <li><a href="./paginas/utilitarios.html">Utilitários</a></li>
+        </ul>
+    </nav>
+    <div class="usuario">
+        <span>Luiz</span>
+    </div>
+    </header>
+
+    <main>
+    <h1>Menu principal</h1>
+    <p class="sub">Resumo da fazenda hoje.</p>
+
+    <section class="resumo" aria-label="Resumo">
+        <div class="indicador"><strong id="animais-ativos">0</strong><span>Animais ativos</span></div>
+        <div class="indicador"><strong id="maquinas-em-operacao">0</strong><span>Máquinas em operação</span></div>
+        <div class="indicador"><strong id="estoque-baixo">0</strong><span>Itens com estoque baixo</span></div>
+        <div class="indicador"><strong id="funcionarios-ativos">0</strong><span>Funcionários ativos</span></div>
+    </section>
+
+    <section class="painel">
+        <div class="caixa">
+        <h2>Últimas movimentações de estoque</h2>
+        <table>
+            <thead><tr><th>Item</th><th>Tipo</th><th>Quantidade</th><th>Data</th></tr></thead>
+            <tbody id="corpoTabela"></tbody>
+        </table>
+        </div>
+
+        <div class="caixa">
+        <h2>Níveis de estoque</h2>
+        <div class="barra">
+            <div><span>Ração bovina</span><span>72%</span></div>
+            <div class="trilho"><i style="width:72%"></i></div>
+        </div>
+        <div class="barra">
+            <div><span>Sal mineral</span><span>55%</span></div>
+            <div class="trilho"><i style="width:55%"></i></div>
+        </div>
+        <div class="barra">
+            <div><span>Diesel</span><span>18%</span></div>
+            <div class="trilho"><i class="baixo" style="width:18%"></i></div>
+        </div>
+        <div class="barra">
+            <div><span>Vacina aftosa</span><span>12%</span></div>
+            <div class="trilho"><i class="baixo" style="width:12%"></i></div>
+        </div>
+        </div>
+    </section>
+    </main>
+        <script src="./scripts/script.js"></script>
+    </body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Detalhes do animal</title>
+  <link rel="stylesheet" href="../estilo/animais-sub.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">Gerenciador de Fazendas</div>
+    <nav aria-label="Navegação principal" style="display:contents">
+      <ul class="menu">
+        <li><a href="#">Menu principal</a></li>
+        <li><a href="animais.html" class="ativo" aria-current="page">Animais</a></li>
+        <li><a href="maquinas.html">Máquinas</a></li>
+        <li><a href="estoque.html">Estoque</a></li>
+        <li><a href="funcionarios.html">Funcionários</a></li>
+        <li><a href="fazenda.html">Fazenda</a></li>
+        <li><a href="utilitarios.html">Utilitários</a></li>
+      </ul>
+    </nav>
+    <div class="usuario"><span class="avatar" aria-hidden="true">L</span><span>Luiz</span></div>
+  </header>
+
+  <main>
+    <a class="voltar" href="animais.html">Voltar para animais</a>
+    <h1 id="tituloAnimal">Carregando...</h1>
+    <p class="sub" id="subAnimal"></p>
+
+    <section class="secao">
+      <div class="secao-topo">
+        <h2>Dados do animal</h2>
+        <div class="botoes">
+          <button type="button" id="btnLote">Mudar de lote</button>
+          <button type="button" id="btnStatus">Mudar status</button>
+        </div>
+      </div>
+      <dl id="dadosAnimal"></dl>
+    </section>
+
+    <section class="secao">
+      <div class="secao-topo">
+        <h2>Pesagens</h2>
+        <button type="button" id="btnPesagem">Adicionar pesagem</button>
+      </div>
+      <div class="tabela-area"><table>
+        <thead><tr><th>Data</th><th>Peso</th><th>Observações</th></tr></thead>
+        <tbody id="corpoPesagens"></tbody>
+      </table></div>
+    </section>
+
+    <section class="secao">
+      <div class="secao-topo">
+        <h2>Vacinas</h2>
+        <button type="button" id="btnVacina">Cadastrar vacina</button>
+      </div>
+      <div class="tabela-area"><table>
+        <thead><tr><th>Vacina</th><th>Data</th><th>Próxima dose</th><th>Responsável</th><th>Observações</th></tr></thead>
+        <tbody id="corpoVacinas"></tbody>
+      </table></div>
+    </section>
+  </main>
+
+  <dialog id="modalLote">
+    <h2>Mudar de lote</h2>
+    <p class="nome-modal"></p>
+    <div class="campo"><label for="novoLote">Novo lote</label><select id="novoLote"></select></div>
+    <p class="erro" role="alert" hidden></p>
+    <div class="rodape-modal">
+      <button type="button" class="secundario" data-fechar="modalLote">Cancelar</button>
+      <button type="button" id="okLote">Confirmar</button>
+    </div>
+  </dialog>
+
+  <dialog id="modalStatus">
+    <h2>Mudar status</h2>
+    <p class="nome-modal"></p>
+    <div class="campo"><label for="novoStatus">Novo status</label>
+      <select id="novoStatus"><option>Ativo</option><option>Tratamento</option><option>Seca</option><option>Prenha</option><option>Abate</option></select>
+    </div>
+    <p class="erro" role="alert" hidden></p>
+    <div class="rodape-modal">
+      <button type="button" class="secundario" data-fechar="modalStatus">Cancelar</button>
+      <button type="button" id="okStatus">Confirmar</button>
+    </div>
+  </dialog>
+
+  <dialog id="modalPesagem">
+    <form id="formPesagem" method="dialog">
+      <h2>Adicionar pesagem</h2>
+      <p class="nome-modal"></p>
+      <div class="grade">
+        <div class="campo"><label for="pesData">Data</label><input type="date" id="pesData" required></div>
+        <div class="campo"><label for="pesPeso">Peso (kg)</label><input type="number" id="pesPeso" min="0" step="0.1" required></div>
+        <div class="campo largo"><label for="pesObs">Observações</label><input type="text" id="pesObs"></div>
+      </div>
+      <p class="erro" role="alert" hidden></p>
+      <div class="rodape-modal">
+        <button type="button" class="secundario" data-fechar="modalPesagem">Cancelar</button>
+        <button type="submit">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="modalVacina">
+    <form id="formVacina" method="dialog">
+      <h2>Cadastrar vacina</h2>
+      <p class="nome-modal"></p>
+      <div class="grade">
+        <div class="campo largo"><label for="vacNome">Vacina</label><input type="text" id="vacNome" required></div>
+        <div class="campo"><label for="vacData">Data de aplicação</label><input type="date" id="vacData" required></div>
+        <div class="campo"><label for="vacProx">Próxima dose</label><input type="date" id="vacProx"></div>
+        <div class="campo largo"><label for="vacResp">Responsável</label><input type="text" id="vacResp"></div>
+        <div class="campo largo"><label for="vacObs">Observações</label><input type="text" id="vacObs"></div>
+      </div>
+      <p class="erro" role="alert" hidden></p>
+      <div class="rodape-modal">
+        <button type="button" class="secundario" data-fechar="modalVacina">Cancelar</button>
+        <button type="submit">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="../scripts/animais-sub.js"></script>
+</body>
+</html>

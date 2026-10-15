@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gestão de lotes</title>
+  <link rel="stylesheet" href="../estilo/animais.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">Gerenciador de Fazendas</div>
+    <nav aria-label="Navegação principal" style="display:contents">
+      <ul class="menu">
+        <li><a href="#">Menu principal</a></li>
+        <li><a href="animais.html">Animais</a></li>
+        <li><a href="maquinas.html">Máquinas</a></li>
+        <li><a href="estoque.html">Estoque</a></li>
+        <li><a href="funcionarios.html">Funcionários</a></li>
+        <li><a href="fazenda.html">Fazenda</a></li>
+        <li><a href="utilitarios.html" class="ativo" aria-current="page">Utilitários</a></li>
+      </ul>
+    </nav>
+    <div class="usuario"><span class="avatar" aria-hidden="true">L</span><span>Luiz</span></div>
+  </header>
+
+  <main>
+    <a class="voltar" href="utilitarios.html">Voltar para utilitários</a>
+    <h1>Gestão de lotes</h1>
+    <p class="sub">Um lote só pode ser desativado quando não tiver animais.</p>
+
+    <div class="barra-acoes">
+      <div class="botoes">
+        <button type="button" id="btnCadastrar">Cadastrar</button>
+        <button type="button" id="btnEditar">Editar</button>
+        <button type="button" id="btnExcluir">Desativar</button>
+      </div>
+    </div>
+
+    <div class="tabela-area">
+      <table>
+        <thead><tr><th>ID</th><th>Nome</th><th>Tamanho</th><th>Localização</th><th>Descrição</th><th>Animais</th></tr></thead>
+        <tbody id="corpoTabela"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <dialog id="modalLote">
+    <form id="formLote" method="dialog" novalidate>
+      <h2 id="tituloModal">Cadastrar lote</h2>
+      <div class="grade">
+        <div class="campo"><label for="nome">Nome</label><input type="text" id="nome" required></div>
+        <div class="campo"><label for="tamanho">Tamanho (ha)</label><input type="number" id="tamanho" min="0" step="0.01"></div>
+        <div class="campo largo"><label for="localizacao">Localização</label><input type="text" id="localizacao"></div>
+        <div class="campo largo"><label for="descricao">Descrição</label><textarea id="descricao" rows="3"></textarea></div>
+      </div>
+      <p class="erro" id="erroLote" role="alert" hidden></p>
+      <div class="rodape-modal">
+        <button type="button" class="secundario" data-fechar="modalLote">Cancelar</button>
+        <button type="submit">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="modalErro">
+    <h2>Nenhum lote selecionado</h2>
+    <p>Clique em uma linha da tabela para selecionar o lote e tente de novo.</p>
+    <div class="rodape-modal"><button type="button" data-fechar="modalErro">Entendi</button></div>
+  </dialog>
+
+  <dialog id="modalExcluir">
+    <h2>Desativar lote</h2>
+    <p id="textoExcluir"></p>
+    <p class="erro" id="erroExcluir" role="alert" hidden></p>
+    <div class="rodape-modal">
+      <button type="button" class="secundario" data-fechar="modalExcluir">Cancelar</button>
+      <button type="button" class="perigo" id="confirmarExcluir">Desativar</button>
+    </div>
+  </dialog>
+
+  <script src="../scripts/lotes.js"></script>
+</body>
+</html>

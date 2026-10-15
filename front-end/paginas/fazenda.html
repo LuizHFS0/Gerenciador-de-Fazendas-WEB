@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fazenda</title>
+  <link rel="stylesheet" href="../estilo/animais.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">Gerenciador de Fazendas</div>
+    <nav aria-label="Navegação principal" style="display:contents">
+      <ul class="menu">
+        <li><a href="../dashboard.html">Menu principal</a></li>
+        <li><a href="animais.html">Animais</a></li>
+        <li><a href="maquinas.html">Máquinas</a></li>
+        <li><a href="estoque.html">Estoque</a></li>
+        <li><a href="funcionarios.html">Funcionários</a></li>
+        <li><a href="fazenda.html" class="ativo" aria-current="page">Fazenda</a></li>
+        <li><a href="utilitarios.html">Utilitários</a></li>
+      </ul>
+    </nav>
+    <div class="usuario"><span class="avatar" aria-hidden="true">L</span><span>Luiz</span></div>
+  </header>
+
+  <main>
+    <h1 id="tituloFazenda">Fazenda</h1>
+    <p class="sub" id="subFazenda">Visão geral e últimas movimentações.</p>
+
+    <section class="resumo" aria-label="Totais da fazenda">
+      <div class="indicador"><strong id="totAnimais">-</strong><span>Animais</span></div>
+      <div class="indicador"><strong id="totFuncionarios">-</strong><span>Funcionários</span></div>
+      <div class="indicador"><strong id="totMaquinas">-</strong><span>Máquinas</span></div>
+      <div class="indicador"><strong id="totProdutos">-</strong><span>Produtos em estoque</span></div>
+      <div class="indicador"><strong id="totLotes">-</strong><span>Lotes</span></div>
+    </section>
+
+    <section class="secao">
+      <div class="secao-topo"><h2>Detalhes da fazenda</h2></div>
+      <div class="detalhes">
+        <div class="logo" id="logoFazenda" aria-hidden="true"></div>
+        <dl id="dadosFazenda"></dl>
+      </div>
+    </section>
+
+    <section class="secao">
+      <div class="secao-topo"><h2>Últimas movimentações</h2></div>
+      <div class="tabela-area"><table>
+        <thead><tr><th>Data e hora</th><th>Usuário</th><th>Ação</th><th>Descrição</th></tr></thead>
+        <tbody id="corpoLogs"></tbody>
+      </table></div>
+    </section>
+  </main>
+
+  <script src="../scripts/fazenda.js"></script>
+</body>
+</html>

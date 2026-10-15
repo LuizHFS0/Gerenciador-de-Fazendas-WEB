@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Utilitários</title>
+  <link rel="stylesheet" href="../estilo/animais.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">Gerenciador de Fazendas</div>
+    <nav aria-label="Navegação principal" style="display:contents">
+      <ul class="menu">
+        <li><a href="../dashboard.html">Menu principal</a></li>
+        <li><a href="animais.html">Animais</a></li>
+        <li><a href="maquinas.html">Máquinas</a></li>
+        <li><a href="estoque.html">Estoque</a></li>
+        <li><a href="funcionarios.html">Funcionários</a></li>
+        <li><a href="fazenda.html">Fazenda</a></li>
+        <li><a href="utilitarios.html" class="ativo" aria-current="page">Utilitários</a></li>
+      </ul>
+    </nav>
+    <div class="usuario"><span class="avatar" aria-hidden="true">L</span><span>Luiz</span></div>
+  </header>
+
+  <main>
+    <h1>Utilitários</h1>
+    <p class="sub">Ferramentas de apoio ao dia a dia da fazenda.</p>
+
+    <section class="cartoes" aria-label="Ferramentas">
+      <a class="cartao" href="alertas.html">
+        <h2>Alertas</h2>
+        <p>Vacinas, manutenções e itens de estoque que precisam de atenção.</p>
+      </a>
+      <a class="cartao" href="lotes.html">
+        <h2>Gestão de lotes</h2>
+        <p>Crie, edite e desative os lotes da fazenda.</p>
+      </a>
+      <div class="cartao">
+        <h2>Backup do banco</h2>
+        <p>Baixa uma cópia completa dos dados (arquivo .db).</p>
+        <button type="button" id="btnBackup">Baixar backup</button>
+        <p class="erro" id="msgBackup" role="status" hidden></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="../scripts/utilitarios.js"></script>
+</body>
+</html>

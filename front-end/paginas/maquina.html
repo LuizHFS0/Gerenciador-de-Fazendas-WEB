@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Detalhes da máquina</title>
+  <link rel="stylesheet" href="../estilo/animais-sub.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">Gerenciador de Fazendas</div>
+    <nav aria-label="Navegação principal" style="display:contents">
+      <ul class="menu">
+        <li><a href="#">Menu principal</a></li>
+        <li><a href="animais.html">Animais</a></li>
+        <li><a href="maquinas.html" class="ativo" aria-current="page">Máquinas</a></li>
+        <li><a href="estoque.html">Estoque</a></li>
+        <li><a href="funcionarios.html">Funcionários</a></li>
+        <li><a href="fazenda.html">Fazenda</a></li>
+        <li><a href="utilitarios.html">Utilitários</a></li>
+      </ul>
+    </nav>
+    <div class="usuario"><span class="avatar" aria-hidden="true">L</span><span>Luiz</span></div>
+  </header>
+
+  <main>
+    <a class="voltar" href="maquinas.html">Voltar para máquinas</a>
+    <h1 id="tituloMaquina">Carregando...</h1>
+    <p class="sub" id="subMaquina"></p>
+
+    <section class="secao">
+      <div class="secao-topo">
+        <h2>Dados da máquina</h2>
+        <button type="button" id="btnStatus">Mudar status</button>
+      </div>
+      <dl id="dadosMaquina"></dl>
+    </section>
+
+    <section class="secao">
+      <div class="secao-topo">
+        <h2>Relatório de manutenção</h2>
+        <button type="button" id="btnManutencao">Registrar manutenção</button>
+      </div>
+      <div class="tabela-area"><table>
+        <thead><tr><th>Data</th><th>Tipo</th><th>Responsável</th><th>Próxima manutenção</th><th>Descrição</th></tr></thead>
+        <tbody id="corpoManutencoes"></tbody>
+      </table></div>
+    </section>
+  </main>
+
+  <dialog id="modalStatus">
+    <h2>Mudar status</h2>
+    <p class="nome-modal"></p>
+    <div class="campo"><label for="novoStatus">Novo status</label><select id="novoStatus"><option>Ativo</option><option>Manutenção</option><option>Encostado</option></select></div>
+    <p class="erro" role="alert" hidden></p>
+    <div class="rodape-modal">
+      <button type="button" class="secundario" data-fechar="modalStatus">Cancelar</button>
+      <button type="button" id="okStatus">Confirmar</button>
+    </div>
+  </dialog>
+
+  <dialog id="modalManutencao">
+    <form id="formManutencao" method="dialog">
+      <h2>Registrar manutenção</h2>
+      <p class="nome-modal"></p>
+      <div class="grade">
+        <div class="campo"><label for="manTipo">Tipo de manutenção</label>
+          <select id="manTipo"><option>Preventiva</option><option>Corretiva</option></select></div>
+        <div class="campo"><label for="manResp">Responsável</label><input type="text" id="manResp" required></div>
+        <div class="campo"><label for="manData">Data da manutenção</label><input type="date" id="manData" required></div>
+        <div class="campo"><label for="manProx">Próxima manutenção</label><input type="date" id="manProx"></div>
+        <div class="campo largo"><label for="manDesc">Descrição</label><textarea id="manDesc" rows="3"></textarea></div>
+      </div>
+      <p class="erro" role="alert" hidden></p>
+      <div class="rodape-modal">
+        <button type="button" class="secundario" data-fechar="modalManutencao">Cancelar</button>
+        <button type="submit">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="../scripts/maquina.js"></script>
+</body>
+</html>
