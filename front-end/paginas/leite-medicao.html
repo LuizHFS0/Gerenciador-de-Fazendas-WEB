@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Adicionar medição de leite</title>
+  <link rel="stylesheet" href="../estilo/animais-sub.css">
+  <link rel="stylesheet" href="../estilo/leite.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">Gerenciador de Fazendas</div>
+    <nav aria-label="Navegação principal" style="display:contents">
+      <ul class="menu">
+        <li><a href="../dashboard.html">Menu principal</a></li>
+        <li><a href="animais.html" class="ativo" aria-current="page">Animais</a></li>
+        <li><a href="maquinas.html">Máquinas</a></li>
+        <li><a href="estoque.html">Estoque</a></li>
+        <li><a href="funcionarios.html">Funcionários</a></li>
+        <li><a href="fazenda.html">Fazenda</a></li>
+        <li><a href="utilitarios.html">Utilitários</a></li>
+      </ul>
+    </nav>
+    <div class="usuario"><span class="avatar" aria-hidden="true">L</span><span>Luiz</span></div>
+  </header>
+
+  <main>
+    <a class="voltar" href="leite.html">Voltar para o painel do leite</a>
+    <h1>Adicionar medição de leite</h1>
+    <p class="sub">Informe a data, quem está lançando e o lote. Depois preencha o leite de cada vaca.</p>
+
+    <section class="secao">
+      <div class="secao-topo"><h2>Dados da medição</h2></div>
+      <form id="formInicio" novalidate>
+        <div class="grade">
+          <div class="campo">
+            <label for="data">Data</label>
+            <input type="date" id="data">
+          </div>
+          <div class="campo">
+            <label for="responsavel">Responsável pela medição</label>
+            <input type="text" id="responsavel" autocomplete="off">
+          </div>
+          <div class="campo largo">
+            <label for="lote">Lote</label>
+            <select id="lote"></select>
+          </div>
+        </div>
+        <p class="erro" id="erroInicio" role="alert" hidden></p>
+        <p class="aviso-travado" id="avisoTravado" hidden>Data, responsável e lote estão travados. Para mudar, cancele e comece outra medição.</p>
+        <div class="rodape-modal">
+          <button type="submit" id="btnConfirmaLote">Confirmar lote</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="secao" id="secaoMedicao" hidden>
+      <div class="secao-topo"><h2 id="tituloMedicao">Leite por vaca</h2></div>
+      <form id="formMedicao" novalidate>
+        <div class="tabela-area">
+          <table>
+            <thead>
+              <tr><th>Vaca</th><th>Manhã (L)</th><th>Tarde (L)</th></tr>
+            </thead>
+            <tbody id="corpoVacas"></tbody>
+          </table>
+        </div>
+        <p class="aviso-travado" id="foraDaLista" hidden></p>
+        <p class="total-digitado" id="totalDigitado"></p>
+        <p class="erro" id="erroMedicao" role="alert" hidden></p>
+        <div class="rodape-medicao">
+          <span class="aviso-travado">Campo vazio não é gravado. Valores já lançados nesta data aparecem preenchidos e podem ser corrigidos.</span>
+          <div class="botoes">
+            <button type="button" class="secundario" id="btnCancelar">Cancelar</button>
+            <button type="submit" id="btnSalvar">Confirmar</button>
+          </div>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <dialog id="modalConfirma">
+    <h2>Confirmar lote</h2>
+    <dl id="confirmaDados"></dl>
+    <p class="aviso-travado">Depois de confirmar, não será possível mudar o lote, a data nem o responsável.</p>
+    <div class="rodape-modal">
+      <button type="button" class="secundario" data-fechar="modalConfirma">Voltar</button>
+      <button type="button" id="okConfirma">Confirmar lote</button>
+    </div>
+  </dialog>
+
+  <dialog id="modalSucesso">
+    <h2>Medição registrada</h2>
+    <p id="textoSucesso"></p>
+    <div class="rodape-modal">
+      <button type="button" class="secundario" id="btnNova">Nova medição</button>
+      <button type="button" id="btnPainel">Ir para o painel do leite</button>
+    </div>
+  </dialog>
+
+  <script src="../scripts/leite-comum.js"></script>
+  <script src="../scripts/leite-medicao.js"></script>
+</body>
+</html>

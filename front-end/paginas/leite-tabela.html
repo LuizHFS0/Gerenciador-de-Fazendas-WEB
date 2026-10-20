@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tabela de produção de leite</title>
+  <link rel="stylesheet" href="../estilo/animais-sub.css">
+  <link rel="stylesheet" href="../estilo/leite.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">Gerenciador de Fazendas</div>
+    <nav aria-label="Navegação principal" style="display:contents">
+      <ul class="menu">
+        <li><a href="../dashboard.html">Menu principal</a></li>
+        <li><a href="animais.html" class="ativo" aria-current="page">Animais</a></li>
+        <li><a href="maquinas.html">Máquinas</a></li>
+        <li><a href="estoque.html">Estoque</a></li>
+        <li><a href="funcionarios.html">Funcionários</a></li>
+        <li><a href="fazenda.html">Fazenda</a></li>
+        <li><a href="utilitarios.html">Utilitários</a></li>
+      </ul>
+    </nav>
+    <div class="usuario"><span class="avatar" aria-hidden="true">L</span><span>Luiz</span></div>
+  </header>
+
+  <main>
+    <a class="voltar" href="leite.html">Voltar para o painel do leite</a>
+    <h1>Tabela de produção de leite</h1>
+    <p class="sub">Produção de cada vaca no período, com filtro por lote.</p>
+
+    <div class="barra-acoes separada">
+      <div class="botoes">
+        <div class="campo">
+          <label for="lote">Lote</label>
+          <select id="lote"></select>
+        </div>
+        <div class="campo">
+          <label for="periodo">Período</label>
+          <select id="periodo">
+            <option value="1">Hoje</option>
+            <option value="7">Últimos 7 dias</option>
+            <option value="30" selected>Últimos 30 dias</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="ordem">Ordem</label>
+          <select id="ordem">
+            <option value="alfabetica" selected>Alfabética</option>
+            <option value="maior">Maior produção</option>
+          </select>
+        </div>
+      </div>
+      <div class="botoes">
+        <button type="button" id="btnPdf" class="secundario">Relatório em PDF</button>
+      </div>
+    </div>
+
+    <p class="erro" id="erroTabela" role="alert" hidden></p>
+
+    <div class="tabela-area">
+      <table>
+        <thead>
+          <tr><th>Vaca</th><th>Brinco</th><th>Lote</th><th>Status</th><th>Manhã</th><th>Tarde</th><th>Total</th></tr>
+        </thead>
+        <tbody id="corpoTabela"></tbody>
+        <tfoot id="rodapeTabela"></tfoot>
+      </table>
+    </div>
+  </main>
+
+  <script src="../scripts/leite-comum.js"></script>
+  <script src="../scripts/leite-tabela.js"></script>
+</body>
+</html>

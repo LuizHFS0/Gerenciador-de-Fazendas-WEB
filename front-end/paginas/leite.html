@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Produção de leite</title>
+  <link rel="stylesheet" href="../estilo/animais-sub.css">
+  <link rel="stylesheet" href="../estilo/leite.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">Gerenciador de Fazendas</div>
+    <nav aria-label="Navegação principal" style="display:contents">
+      <ul class="menu">
+        <li><a href="../dashboard.html">Menu principal</a></li>
+        <li><a href="animais.html" class="ativo" aria-current="page">Animais</a></li>
+        <li><a href="maquinas.html">Máquinas</a></li>
+        <li><a href="estoque.html">Estoque</a></li>
+        <li><a href="funcionarios.html">Funcionários</a></li>
+        <li><a href="fazenda.html">Fazenda</a></li>
+        <li><a href="utilitarios.html">Utilitários</a></li>
+      </ul>
+    </nav>
+    <div class="usuario"><span class="avatar" aria-hidden="true">L</span><span>Luiz</span></div>
+  </header>
+
+  <main>
+    <a class="voltar" href="animais.html">Voltar para animais</a>
+    <h1>Produção de leite</h1>
+    <p class="sub">Acompanhe a produção das vacas e registre novas medições.</p>
+
+    <div class="barra-acoes separada">
+      <div class="campo">
+        <label for="periodo">Período</label>
+        <select id="periodo">
+          <option value="1">Hoje</option>
+          <option value="7">Últimos 7 dias</option>
+          <option value="30" selected>Últimos 30 dias</option>
+        </select>
+      </div>
+      <div class="botoes">
+        <button type="button" id="btnMedicao">Adicionar medição</button>
+        <button type="button" id="btnTabela">Abrir tabela</button>
+        <button type="button" id="btnPdf" class="secundario">Relatório em PDF</button>
+      </div>
+    </div>
+
+    <p class="erro" id="erroPainel" role="alert" hidden></p>
+
+    <div class="leite-resumo">
+      <div class="leite-indicador"><strong id="indHoje">-</strong><span>Litros hoje</span></div>
+      <div class="leite-indicador"><strong id="indPeriodo">-</strong><span>Litros no período</span></div>
+      <div class="leite-indicador"><strong id="indMedia">-</strong><span>Média por dia com medição</span></div>
+      <div class="leite-indicador"><strong id="indVacas">-</strong><span>Vacas que produziram</span></div>
+    </div>
+
+    <section class="secao">
+      <div class="secao-topo">
+        <h2>As 5 vacas que mais produziram</h2>
+      </div>
+      <div class="tabela-area">
+        <table>
+          <thead>
+            <tr><th>Posição</th><th>Vaca</th><th>Brinco</th><th>Lote</th><th>Total</th><th>Comparação</th></tr>
+          </thead>
+          <tbody id="corpoTop"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../scripts/leite-comum.js"></script>
+  <script src="../scripts/leite.js"></script>
+</body>
+</html>

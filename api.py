@@ -7,9 +7,32 @@ import os
 import tempfile
 from datetime import datetime
 
+import math
+import unicodedata
+from datetime import date, timedelta
+from xml.sax.saxutils import escape as _escapar
+
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from pathlib import Path
+
 from logs import registrar_log, nome_de
 
 app = FastAPI()
+
+FRONTEND_DIR = Path(__file__).parent / "front-end"
+
+
+@app.get("/")
+def pagina_inicial():
+    return FileResponse(FRONTEND_DIR / "dashboard.html")
+
+app.mount(
+    "/front-end",
+    StaticFiles(directory=FRONTEND_DIR),
+    name="front-end"
+)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -584,3 +607,345 @@ def ultimos_logs(limite: int = 5):
         """SELECT l.data_hora, l.acao, l.tabela_afetada, l.descricao, u.nome AS usuario
            FROM logs l LEFT JOIN usuarios u ON u.id = l.usuario_id
            ORDER BY l.data_hora DESC, l.id DESC LIMIT ?""", (limite,))}
+
+TURNO_MANHA = "Manhã"
+TURNO_TARDE = "Tarde"
+
+# vaca em produção: fêmea do tipo Leite e ativa (as secas são tiradas só no lançamento)
+# LIKE ignora maiúscula; "F%" aceita Fêmea, Femea ou F
+_VACAS_LEITE = "a.ativo = 1 AND a.sexo LIKE 'F%' AND a.tipo LIKE 'Leite'"
+
+
+def _garantir_coluna_responsavel_leite():
+    # o formulário de medição grava quem lançou; cria a coluna se ela ainda não existir
+    colunas = [c["name"] for c in consultar("PRAGMA table_info(producao_leite)")]
+    if colunas and "responsavel" not in colunas:
+        executar("ALTER TABLE producao_leite ADD COLUMN responsavel TEXT")
+
+
+_garantir_coluna_responsavel_leite()
+
+
+# ---------- Auxiliares do leite ----------
+def _chave_alfabetica(texto):
+    # ordem alfabética que ignora acento e maiúscula (Ângela vem antes de Bela)
+    sem_acento = unicodedata.normalize("NFD", texto or "")
+    return "".join(c for c in sem_acento if unicodedata.category(c) != "Mn").lower()
+
+
+def _data_valida(texto):
+    try:
+        return datetime.strptime(texto or "", "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Data inválida.")
+
+
+def _validar_dias(dias):
+    if not 1 <= dias <= 365:
+        raise HTTPException(status_code=400, detail="Período inválido.")
+
+
+def _br(d):
+    return d.strftime("%d/%m/%Y")
+
+
+def _litros_br(valor):
+    return f"{valor:,.1f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def _lote_por_nome(nome):
+    r = consultar("SELECT id FROM lote WHERE nome = ? AND ativo = 1", (nome,))
+    if not r:
+        raise HTTPException(status_code=400, detail="Lote não encontrado.")
+    return r[0]["id"]
+
+
+def _vacas_aptas(lote_id):
+    return consultar(f"""SELECT a.id, a.nome, a.brinco FROM animais a
+                         WHERE a.lote_id = ? AND {_VACAS_LEITE}
+                           AND COALESCE(a.status, '') <> 'Seca'""", (lote_id,))
+
+
+def _resumo_leite(dias, lote=""):
+    params = [f"-{dias - 1} day"]
+    filtro = ""
+    if lote:
+        filtro = "AND l.nome = ?"
+        params.append(lote)
+    return consultar(f"""
+        SELECT COALESCE(SUM(p.litros), 0) AS litros,
+               COUNT(DISTINCT p.data_producao) AS dias_medidos,
+               COUNT(DISTINCT p.animal_id) AS vacas
+        FROM producao_leite p
+        JOIN animais a ON a.id = p.animal_id
+        LEFT JOIN lote l ON l.id = a.lote_id
+        WHERE a.ativo = 1
+          AND p.data_producao BETWEEN date('now', 'localtime', ?) AND date('now', 'localtime')
+          {filtro}""", params)[0]
+
+
+def _producao_por_vaca(lote, dias, ordem):
+    _validar_dias(dias)
+    params = [f"-{dias - 1} day"]
+    filtro = ""
+    if lote:
+        filtro = "AND l.nome = ?"
+        params.append(lote)
+
+    vacas = consultar(f"""
+        SELECT a.id, a.nome, a.brinco, a.status, l.nome AS lote,
+               COALESCE(SUM(CASE WHEN p.turno = '{TURNO_MANHA}' THEN p.litros END), 0) AS manha,
+               COALESCE(SUM(CASE WHEN p.turno = '{TURNO_TARDE}' THEN p.litros END), 0) AS tarde,
+               COALESCE(SUM(p.litros), 0) AS total
+        FROM animais a
+        LEFT JOIN lote l ON l.id = a.lote_id
+        LEFT JOIN producao_leite p
+               ON p.animal_id = a.id
+              AND p.data_producao BETWEEN date('now', 'localtime', ?) AND date('now', 'localtime')
+        WHERE {_VACAS_LEITE} {filtro}
+        GROUP BY a.id""", params)
+
+    for v in vacas:
+        for campo in ("manha", "tarde", "total"):
+            v[campo] = round(v[campo], 2)
+
+    if ordem == "maior":
+        vacas.sort(key=lambda v: (-v["total"], _chave_alfabetica(v["nome"])))
+    else:
+        vacas.sort(key=lambda v: _chave_alfabetica(v["nome"]))
+    return vacas
+
+
+# ---------- Leite: painel ----------
+@app.get("/dashboardLeite")
+def dashboard_leite(dias: int = 30):
+    _validar_dias(dias)
+    hoje = consultar("""SELECT COALESCE(SUM(p.litros), 0) AS litros
+                        FROM producao_leite p JOIN animais a ON a.id = p.animal_id
+                        WHERE a.ativo = 1 AND p.data_producao = date('now', 'localtime')""")[0]["litros"]
+    resumo = _resumo_leite(dias)
+    vacas = _producao_por_vaca("", dias, "maior")
+    media = resumo["litros"] / resumo["dias_medidos"] if resumo["dias_medidos"] else 0
+
+    return {
+        "dias": dias,
+        "litros_hoje": round(hoje, 2),
+        "litros_periodo": round(resumo["litros"], 2),
+        "media_diaria": round(media, 2),
+        "vacas_produzindo": resumo["vacas"],
+        "top5": [v for v in vacas if v["total"] > 0][:5],
+    }
+
+
+# ---------- Leite: lançamento ----------
+@app.get("/vacasDoLote/{lote}")
+def vacas_do_lote(lote: str, data: str):
+    _data_valida(data)
+    lote_id = _lote_por_nome(lote)
+    vacas = _vacas_aptas(lote_id)
+
+    # o que já foi lançado nessa data aparece preenchido
+    lancados = {(r["animal_id"], r["turno"]): r["litros"] for r in consultar(
+        "SELECT animal_id, turno, litros FROM producao_leite WHERE data_producao = ?", (data,))}
+    for v in vacas:
+        v["manha"] = lancados.get((v["id"], TURNO_MANHA))
+        v["tarde"] = lancados.get((v["id"], TURNO_TARDE))
+
+    vacas.sort(key=lambda v: _chave_alfabetica(v["nome"]))
+
+    # fêmeas do lote que ficaram de fora, para a tela explicar o motivo
+    ids_aptas = {v["id"] for v in vacas}
+    animais = consultar("SELECT id, nome, sexo, tipo FROM animais WHERE lote_id = ? AND ativo = 1",
+                        (lote_id,))
+    ignoradas = []
+    for a in animais:
+        if a["id"] in ids_aptas or not (a["sexo"] or "").upper().startswith("F"):
+            continue
+        if (a["tipo"] or "").lower() != "leite":
+            motivo = f"tipo {a['tipo'] or 'não informado'}"
+        else:
+            motivo = "vaca seca"
+        ignoradas.append({"nome": a["nome"], "motivo": motivo})
+
+    return {"vacas": vacas, "ignoradas": ignoradas, "total_animais": len(animais)}
+
+
+@app.post("/registrarProducaoLeite", status_code=201)
+def registrar_producao_leite(d: dict):
+    data = _data_valida(d.get("data"))
+    if data > date.today():
+        raise HTTPException(status_code=400, detail="A data não pode ser futura.")
+
+    responsavel = (d.get("responsavel") or "").strip()
+    if not responsavel:
+        raise HTTPException(status_code=400, detail="Informe o responsável pela medição.")
+
+    lote = d.get("lote")
+    permitidas = {v["id"] for v in _vacas_aptas(_lote_por_nome(lote))}
+
+    registros = []   # (animal_id, turno, litros)
+    for m in d.get("medicoes") or []:
+        animal_id = m.get("animal_id")
+        if animal_id not in permitidas:
+            raise HTTPException(status_code=400,
+                                detail=f"O animal {animal_id} não é uma vaca em produção do lote {lote}.")
+        for turno, chave in ((TURNO_MANHA, "manha"), (TURNO_TARDE, "tarde")):
+            bruto = m.get(chave)
+            if bruto is None or bruto == "":
+                continue    # campo vazio = não medido, não grava nada
+            try:
+                litros = float(bruto)
+            except (TypeError, ValueError):
+                raise HTTPException(status_code=400, detail="Há um valor de leite inválido.")
+            if not math.isfinite(litros) or litros < 0:
+                raise HTTPException(status_code=400, detail="O leite não pode ser negativo.")
+            registros.append((animal_id, turno, round(litros, 2)))
+
+    if not registros:
+        raise HTTPException(status_code=400, detail="Preencha ao menos um valor de leite.")
+
+    conn = conectar()
+    try:
+        cursor = conn.cursor()
+        for animal_id, turno, litros in registros:
+            cursor.execute("""SELECT id FROM producao_leite
+                              WHERE animal_id = ? AND data_producao = ? AND turno = ?""",
+                           (animal_id, data.isoformat(), turno))
+            existente = cursor.fetchone()
+            if existente:
+                cursor.execute("UPDATE producao_leite SET litros = ?, responsavel = ? WHERE id = ?",
+                               (litros, responsavel, existente[0]))
+            else:
+                cursor.execute("""INSERT INTO producao_leite
+                                  (animal_id, data_producao, litros, turno, responsavel)
+                                  VALUES (?, ?, ?, ?, ?)""",
+                               (animal_id, data.isoformat(), litros, turno, responsavel))
+        conn.commit()
+    finally:
+        conn.close()
+
+    registrar_log("Registro", "producao_leite",
+                  f"Produção de leite do lote {lote} registrada em {_br(data)} "
+                  f"({len(registros)} lançamentos, responsável {responsavel})")
+    return {"message": "Produção registrada!", "registros": len(registros)}
+
+
+# ---------- Leite: tabela ----------
+@app.get("/consultarProducaoLeite")
+def consultar_producao_leite(lote: str = "", dias: int = 30, ordem: str = "alfabetica"):
+    return {"vacas": _producao_por_vaca(lote, dias, ordem)}
+
+
+# ---------- Leite: relatório em PDF ----------
+@app.get("/relatorioLeite")
+def relatorio_leite(lote: str = "", dias: int = 30, ordem: str = "maior"):
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+        from reportlab.lib.units import cm
+        from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+    except ImportError:
+        raise HTTPException(status_code=500,
+                            detail="Instale a biblioteca reportlab (pip install reportlab) para gerar o PDF.")
+
+    vacas = _producao_por_vaca(lote, dias, ordem)
+    resumo = _resumo_leite(dias, lote)
+    media = resumo["litros"] / resumo["dias_medidos"] if resumo["dias_medidos"] else 0
+    ranking = sorted((v for v in vacas if v["total"] > 0),
+                     key=lambda v: (-v["total"], _chave_alfabetica(v["nome"])))[:5]
+
+    hoje = date.today()
+    inicio = hoje - timedelta(days=dias - 1)
+    periodo = f"hoje ({_br(hoje)})" if dias == 1 else f"{_br(inicio)} a {_br(hoje)} ({dias} dias)"
+    escopo = f"lote {_escapar(lote)}" if lote else "todos os lotes"
+
+    verde = colors.HexColor("#2f4a2b")
+    palha = colors.HexColor("#e9e4d2")
+    linha = colors.HexColor("#dcd8c8")
+    suave = colors.HexColor("#6a7468")
+
+    base = getSampleStyleSheet()
+    s_titulo = ParagraphStyle("titulo", parent=base["Title"], alignment=0, fontSize=20,
+                              textColor=verde, spaceAfter=4)
+    s_sub = ParagraphStyle("sub", parent=base["Normal"], fontSize=10, leading=14, textColor=suave)
+    s_h2 = ParagraphStyle("h2", parent=base["Heading2"], fontSize=13, textColor=verde,
+                          spaceBefore=16, spaceAfter=6)
+    s_cel = ParagraphStyle("cel", parent=base["Normal"], fontSize=9, leading=11)
+
+    def tabela(dados, larguras, direita_a_partir, total=False):
+        t = Table(dados, colWidths=[l * cm for l in larguras], repeatRows=1)
+        estilo = [
+            ("BACKGROUND", (0, 0), (-1, 0), verde),
+            ("TEXTCOLOR", (0, 0), (-1, 0), palha),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, -1), 9),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f7f5ec")]),
+            ("LINEBELOW", (0, 0), (-1, -1), 0.4, linha),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("ALIGN", (direita_a_partir, 0), (-1, -1), "RIGHT"),
+            ("TOPPADDING", (0, 0), (-1, -1), 5),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ]
+        if total:
+            estilo += [("BACKGROUND", (0, -1), (-1, -1), palha),
+                       ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold")]
+        t.setStyle(TableStyle(estilo))
+        return t
+
+    elementos = [
+        Paragraph("Relatório de produção de leite", s_titulo),
+        Paragraph(f"Período: {periodo}<br/>Abrangência: {escopo}<br/>"
+                  f"Gerado em {datetime.now():%d/%m/%Y} às {datetime.now():%H:%M}", s_sub),
+        Paragraph("Resumo", s_h2),
+        tabela([["Indicador", "Valor"],
+                ["Total produzido", f"{_litros_br(resumo['litros'])} L"],
+                ["Média por dia com medição", f"{_litros_br(media)} L"],
+                ["Dias com medição", str(resumo["dias_medidos"])],
+                ["Vacas que produziram", str(resumo["vacas"])]],
+               [9, 8], 1),
+        Paragraph("As 5 vacas que mais produziram", s_h2),
+    ]
+
+    if ranking:
+        elementos.append(tabela(
+            [["Posição", "Vaca", "Lote", "Total"]] +
+            [[str(i), Paragraph(_escapar(v["nome"]), s_cel), v["lote"] or "-", f"{_litros_br(v['total'])} L"]
+             for i, v in enumerate(ranking, 1)],
+            [2, 8, 3, 4], 3))
+    else:
+        elementos.append(Paragraph("Nenhuma produção registrada no período.", s_sub))
+
+    elementos.append(Paragraph("Produção por vaca", s_h2))
+    if vacas:
+        soma_manha = sum(v["manha"] for v in vacas)
+        soma_tarde = sum(v["tarde"] for v in vacas)
+        linhas = [["Vaca", "Brinco", "Lote", "Status", "Manhã", "Tarde", "Total"]]
+        for v in vacas:
+            linhas.append([Paragraph(_escapar(v["nome"]), s_cel), v["brinco"] or "-", v["lote"] or "-",
+                           v["status"] or "-", _litros_br(v["manha"]), _litros_br(v["tarde"]),
+                           _litros_br(v["total"])])
+        linhas.append(["Total", "", "", "", _litros_br(soma_manha), _litros_br(soma_tarde),
+                       _litros_br(soma_manha + soma_tarde)])
+        elementos.append(tabela(linhas, [4.6, 2.2, 1.8, 2.4, 2.0, 2.0, 2.0], 4, total=True))
+    else:
+        elementos.append(Paragraph("Nenhuma vaca encontrada para o filtro escolhido.", s_sub))
+
+    def rodape(canvas, doc):
+        canvas.saveState()
+        canvas.setFont("Helvetica", 8)
+        canvas.setFillColor(suave)
+        canvas.drawString(2 * cm, 1.2 * cm, "Gerenciador de Fazendas")
+        canvas.drawRightString(A4[0] - 2 * cm, 1.2 * cm, f"Página {doc.page}")
+        canvas.restoreState()
+
+    fd, caminho = tempfile.mkstemp(suffix=".pdf")
+    os.close(fd)
+    SimpleDocTemplate(caminho, pagesize=A4, leftMargin=2 * cm, rightMargin=2 * cm,
+                      topMargin=2 * cm, bottomMargin=2 * cm,
+                      title="Relatório de produção de leite").build(
+        elementos, onFirstPage=rodape, onLaterPages=rodape)
+
+    nome = f"relatorio-leite-{datetime.now():%Y-%m-%d_%H-%M}.pdf"
+    return FileResponse(caminho, filename=nome, media_type="application/pdf",
+                        background=BackgroundTask(os.remove, caminho))   # apaga o arquivo temporário

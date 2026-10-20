@@ -5,6 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Gerenciador de Animais</title>
   <link rel="stylesheet" href="../estilo/animais.css">
+  <link rel="stylesheet" href="../estilo/leite.css">
+  <style>
+    /* Botão de destaque: Produção de leite */
+    .btn-leite {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+      padding: 10px 22px;
+      border-radius: 6px;
+      border-bottom: 3px solid var(--terra, #8a5a2b);
+      background: var(--dourado, #d9b25f);
+      color: var(--campo-escuro, #213520);
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .btn-leite svg { width: 18px; height: 18px; flex: none; }
+    .btn-leite:hover { background: #c9a04c; }
+    .btn-leite:focus-visible { outline: 2px solid var(--campo, #2f4a2b); outline-offset: 2px; }
+    @media (max-width: 560px) { .btn-leite { margin-left: 0; } }
+  </style>
 </head>
 <body>
 
@@ -42,6 +63,12 @@
         <button type="button" id="btnInformacoes">Informações</button>
         <button type="button" id="btnExcluir">Excluir</button>
       </div>
+      <a class="btn-leite" href="leite.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3c3.5 4.2 6 7.2 6 10.5a6 6 0 0 1-12 0C6 10.2 8.5 7.2 12 3z"/>
+        </svg>
+        Produção de leite
+      </a>
     </div>
 
     <div class="tabela-area">
