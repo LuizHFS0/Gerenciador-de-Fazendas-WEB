@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Detalhes do funcionário</title>
   <link rel="stylesheet" href="../estilo/animais-sub.css">
+  <style>
+    .selo { display: inline-block; padding: 1px 10px; border-radius: 10px; font-size: .8rem; font-weight: 700;
+            background: var(--palha); color: var(--campo-escuro); }
+    .selo.inativo { background: #f3dcd0; color: var(--alerta); }
+    .selo.pendente { background: #f5ebcf; color: var(--terra); }
+    .senha-temp { display: block; font-family: Consolas, "Courier New", monospace; font-size: 1.4rem; letter-spacing: .08em;
+                  padding: 10px 14px; background: var(--palha); border-radius: 6px; user-select: all; }
+    .aviso-senha { color: var(--alerta); font-weight: 700; font-size: .92rem; margin-top: 12px; }
+  </style>
 </head>
 <body>
   <header class="topo">
@@ -33,6 +42,16 @@
       <dl id="dadosFuncionario"></dl>
     </section>
 
+    <section class="secao" id="secaoAcesso">
+      <div class="secao-topo">
+        <h2>Acesso ao sistema</h2>
+        <div class="botoes" id="botoesAcesso"></div>
+      </div>
+      <p class="sub" id="semAcesso" hidden style="margin-bottom:0">Este funcionário ainda não tem acesso ao sistema.</p>
+      <dl id="dadosAcesso"></dl>
+      <p class="erro" id="erroAcesso" role="alert" hidden></p>
+    </section>
+
     <section class="secao">
       <div class="secao-topo"><h2>Movimentações realizadas</h2></div>
       <p class="sub" style="margin-bottom:12px">Registros (vacinas, manutenções e movimentações de estoque) em que o campo Responsável tem o nome deste funcionário.</p>
@@ -43,6 +62,44 @@
     </section>
   </main>
 
+  <dialog id="modalSenha">
+    <h2 id="tituloSenha">Senha temporária</h2>
+    <p id="textoSenha"></p>
+    <dl>
+      <dt>Código da fazenda</dt><dd id="acFazenda"></dd>
+      <dt>Usuário</dt><dd id="acUsuario"></dd>
+    </dl>
+    <p style="margin-top:12px"><strong>Senha temporária</strong></p>
+    <code class="senha-temp" id="acSenha"></code>
+    <p class="aviso-senha">A senha aparece só desta vez. No primeiro login ele será obrigado a trocá-la.</p>
+    <div class="rodape-modal">
+      <button type="button" class="secundario" id="btnCopiarAcesso">Copiar acesso</button>
+      <button type="button" data-fechar="modalSenha">Já anotei</button>
+    </div>
+  </dialog>
+
+  <dialog id="modalPerfil">
+    <h2>Mudar perfil</h2>
+    <div class="campo"><label for="novoNivel">Novo perfil</label>
+      <select id="novoNivel"><option value="funcionario">Funcionário</option><option value="gerente">Gerente</option></select></div>
+    <p class="erro" id="erroPerfil" role="alert" hidden></p>
+    <div class="rodape-modal">
+      <button type="button" class="secundario" data-fechar="modalPerfil">Cancelar</button>
+      <button type="button" id="okPerfil">Confirmar</button>
+    </div>
+  </dialog>
+
+  <dialog id="modalConfirma">
+    <h2 id="confirmaTitulo"></h2>
+    <p id="confirmaTexto"></p>
+    <p class="erro" id="erroConfirma" role="alert" hidden></p>
+    <div class="rodape-modal">
+      <button type="button" class="secundario" data-fechar="modalConfirma">Cancelar</button>
+      <button type="button" id="okConfirma">Confirmar</button>
+    </div>
+  </dialog>
+
+  <script src="../scripts/sessao.js"></script>
   <script src="../scripts/funcionario.js"></script>
 </body>
 </html>

@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Gerenciador de Funcionários</title>
   <link rel="stylesheet" href="../estilo/animais.css">
+  <style>
+    .dica-acesso { margin-top: 12px; color: var(--suave); font-size: .9rem; }
+    .senha-temp { display: block; font-family: Consolas, "Courier New", monospace; font-size: 1.4rem; letter-spacing: .08em;
+                  padding: 10px 14px; background: var(--palha); border-radius: 6px; user-select: all; }
+    .aviso-senha { color: var(--alerta); font-weight: 700; font-size: .92rem; margin-top: 12px; }
+  </style>
 </head>
 <body>
   <header class="topo">
@@ -25,7 +31,7 @@
 
   <main>
     <h1>Gerenciador de Funcionários</h1>
-    <p class="sub">Cadastre e consulte os funcionários da fazenda.</p>
+    <p class="sub">Cadastre e consulte os funcionários da fazenda. Cada cadastro já cria o acesso dele ao sistema.</p>
 
     <div class="barra-acoes">
       <div class="botoes">
@@ -57,6 +63,8 @@
         <div class="campo largo"><label for="endereco">Endereço</label><input type="text" id="endereco"></div>
         <div class="campo largo"><label for="observacoes">Observações</label><textarea id="observacoes" rows="3"></textarea></div>
       </div>
+      <p class="dica-acesso">Ao salvar, o acesso ao sistema é criado junto: usuário no formato <strong>Nome.Sobrenome</strong> e uma senha temporária.
+        O cargo <strong>Gerente</strong> cria um acesso de Gerente (só o Dono pode cadastrar); qualquer outro cargo cria um acesso de Funcionário.</p>
       <p class="erro" id="erroCadastro" role="alert" hidden></p>
       <div class="rodape-modal">
         <button type="button" class="secundario" data-fechar="modalCadastro">Cancelar</button>
@@ -65,12 +73,30 @@
     </form>
   </dialog>
 
+  <dialog id="modalAcesso">
+    <h2>Funcionário cadastrado</h2>
+    <p id="textoAcesso"></p>
+    <dl>
+      <dt>Código da fazenda</dt><dd id="acFazenda"></dd>
+      <dt>Usuário</dt><dd id="acUsuario"></dd>
+      <dt>Perfil</dt><dd id="acPerfil"></dd>
+    </dl>
+    <p style="margin-top:12px"><strong>Senha temporária</strong></p>
+    <code class="senha-temp" id="acSenha"></code>
+    <p class="aviso-senha">A senha aparece só desta vez. Entregue o acesso ao funcionário: no primeiro login ele será obrigado a trocá-la.</p>
+    <div class="rodape-modal">
+      <button type="button" class="secundario" id="btnCopiarAcesso">Copiar acesso</button>
+      <button type="button" data-fechar="modalAcesso">Já anotei</button>
+    </div>
+  </dialog>
+
   <dialog id="modalErro">
     <h2>Nenhum funcionário selecionado</h2>
     <p>Clique em uma linha da tabela para selecionar o funcionário e tente de novo.</p>
     <div class="rodape-modal"><button type="button" data-fechar="modalErro">Entendi</button></div>
   </dialog>
 
+  <script src="../scripts/sessao.js"></script>
   <script src="../scripts/funcionarios.js"></script>
 </body>
 </html>

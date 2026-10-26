@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Trocar senha | FazendaWEB</title>
+  <style>
+    :root {
+      --campo: #2f4a2b; --campo-escuro: #213520; --palha: #e9e4d2; --terra: #8a5a2b;
+      --fundo: #f3f1ea; --papel: #ffffff; --texto: #26302a; --suave: #6a7468;
+      --linha: #dcd8c8; --alerta: #b4561f; --dourado: #d9b25f;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { min-height: 100vh; display: grid; place-items: center; padding: 24px;
+           font-family: "Trebuchet MS", "Segoe UI", Tahoma, sans-serif; background: var(--fundo);
+           color: var(--texto); line-height: 1.5; }
+    main { width: min(420px, 100%); }
+    .marca { font-size: 1.3rem; font-weight: 700; color: var(--campo); margin-bottom: 18px; }
+    form { background: var(--papel); border: 1px solid var(--linha); border-top: 6px solid var(--dourado);
+           border-radius: 6px; padding: 26px 26px 22px; }
+    h1 { font-size: 1.25rem; margin-bottom: 4px; }
+    .sub { color: var(--suave); font-size: .92rem; margin-bottom: 18px; }
+    .campo { display: flex; flex-direction: column; gap: 3px; margin-bottom: 14px; }
+    label { font-weight: 700; font-size: .9rem; }
+    input { font: inherit; padding: 9px 10px; border: 1px solid var(--linha); border-radius: 6px; }
+    input:focus-visible, button:focus-visible { outline: 2px solid var(--campo); outline-offset: 2px; }
+    button { width: 100%; font: inherit; font-weight: 700; padding: 10px; border: 0; border-radius: 6px;
+             background: var(--campo); color: var(--palha); cursor: pointer; margin-top: 4px; }
+    button:hover { background: var(--campo-escuro); }
+    button:disabled { opacity: .6; cursor: wait; }
+    .erro { color: var(--alerta); font-weight: 700; font-size: .92rem; margin-bottom: 12px; }
+    .sair { display: block; margin-top: 14px; text-align: center; color: var(--suave); font-size: .9rem;
+            background: none; width: auto; padding: 0; font-weight: 400; text-decoration: underline; margin-inline: auto; }
+    .sair:hover { background: none; color: var(--texto); }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="marca">FazendaWEB</div>
+    <form id="formTroca" novalidate>
+      <h1>Defina a sua senha</h1>
+      <p class="sub">Troque a senha temporária por uma só sua. Use pelo menos 8 caracteres.</p>
+      <div class="campo">
+        <label for="atual">Senha atual (temporária)</label>
+        <input id="atual" type="password" autocomplete="current-password">
+      </div>
+      <div class="campo">
+        <label for="nova">Nova senha</label>
+        <input id="nova" type="password" autocomplete="new-password">
+      </div>
+      <div class="campo">
+        <label for="confirma">Repita a nova senha</label>
+        <input id="confirma" type="password" autocomplete="new-password">
+      </div>
+      <p class="erro" id="erro" role="alert" hidden></p>
+      <button type="submit" id="btnSalvar">Salvar nova senha</button>
+      <button type="button" class="sair" id="btnSair">Sair</button>
+    </form>
+  </main>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const login = "/front-end/login.html";
+
+    function mostrarErro(texto) { $("erro").textContent = texto; $("erro").hidden = false; }
+
+    $("btnSair").addEventListener("click", async () => {
+      await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+      location.href = login;
+    });
+
+    $("formTroca").addEventListener("submit", async e => {
+      e.preventDefault();
+      $("erro").hidden = true;
+      if (!$("atual").value || !$("nova").value) return mostrarErro("Preencha a senha atual e a nova senha.");
+      if ($("nova").value.length < 8) return mostrarErro("A nova senha precisa ter pelo menos 8 caracteres.");
+      if ($("nova").value !== $("confirma").value) return mostrarErro("As duas senhas novas não são iguais.");
+
+      $("btnSalvar").disabled = true;
+      try {
+        const resposta = await fetch("/api/auth/trocar-senha", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ senha_atual: $("atual").value, nova_senha: $("nova").value })
+        });
+        if (resposta.status === 401) { location.href = login; return; }
+        const corpo = await resposta.json().catch(() => ({}));
+        if (!resposta.ok) throw new Error(corpo.detail || "Não foi possível trocar a senha.");
+        location.href = "/front-end/dashboard.html";
+      } catch (erro) {
+        mostrarErro(erro.message);
+        $("btnSalvar").disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

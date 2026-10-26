@@ -1,23 +1,23 @@
-import sqlite3
 from datetime import datetime
 
-# Precisa ser o mesmo banco usado no api.py
-CAMINHO_BANCO = "banco.db"
+from banco_fazenda import conectar, usuario_atual_id
 
 # Tabelas das quais nome_de() pode buscar o nome (lista fixa, por segurança)
 TABELAS_COM_NOME = {"animais", "maquinas", "funcionarios", "estoque", "lote"}
 
 
 def registrar_log(acao, tabela, descricao, usuario_id=None):
-    """Grava uma movimentação na tabela logs.
+    """Grava uma movimentação na tabela logs do banco da fazenda de quem está logado.
 
-    Abre e fecha a própria conexão. Se der erro, só avisa no terminal:
-    um log que falha nunca derruba a operação principal.
+    O usuário do log é o da sessão atual (se não for informado). Se der erro, só avisa
+    no terminal: um log que falha nunca derruba a operação principal.
     Chame depois do commit da rota, fora do try que mantém a conexão aberta.
     """
     conn = None
     try:
-        conn = sqlite3.connect(CAMINHO_BANCO)
+        conn = conectar()
+        if usuario_id is None:
+            usuario_id = usuario_atual_id()
         conn.execute(
             """INSERT INTO logs (usuario_id, acao, tabela_afetada, data_hora, descricao)
                VALUES (?, ?, ?, ?, ?)""",
@@ -37,7 +37,7 @@ def nome_de(tabela, registro_id):
         return f"#{registro_id}"
     conn = None
     try:
-        conn = sqlite3.connect(CAMINHO_BANCO)
+        conn = conectar()
         linha = conn.execute(f"SELECT nome FROM {tabela} WHERE id = ?", (registro_id,)).fetchone()
         return linha[0] if linha else f"#{registro_id}"
     except Exception:

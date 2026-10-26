@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Usuários da fazenda</title>
+  <link rel="stylesheet" href="../estilo/animais-sub.css">
+  <style>
+    .selo { display: inline-block; padding: 1px 10px; border-radius: 10px; font-size: .8rem; font-weight: 700;
+            background: var(--palha); color: var(--campo-escuro); }
+    .selo.inativo { background: #f3dcd0; color: var(--alerta); }
+    .selo.pendente { background: #f5ebcf; color: var(--terra); }
+    td.acoes { white-space: nowrap; }
+    td.acoes button { padding: 4px 12px; font-size: .85rem; margin: 0 2px; }
+    .senha-temp { display: block; font-family: Consolas, "Courier New", monospace; font-size: 1.5rem; letter-spacing: .08em;
+                  text-align: center; padding: 14px; margin: 14px 0; background: var(--palha); border-radius: 6px;
+                  user-select: all; }
+    .aviso-senha { color: var(--alerta); font-weight: 700; font-size: .92rem; }
+  </style>
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">Gerenciador de Fazendas</div>
+    <nav aria-label="Navegação principal" style="display:contents">
+      <ul class="menu">
+        <li><a href="../dashboard.html">Menu principal</a></li>
+        <li><a href="animais.html">Animais</a></li>
+        <li><a href="maquinas.html">Máquinas</a></li>
+        <li><a href="estoque.html">Estoque</a></li>
+        <li><a href="funcionarios.html">Funcionários</a></li>
+        <li><a href="fazenda.html">Fazenda</a></li>
+        <li><a href="utilitarios.html" class="ativo" aria-current="page">Utilitários</a></li>
+      </ul>
+    </nav>
+    <div class="usuario"><span class="avatar" aria-hidden="true">L</span><span>Luiz</span></div>
+  </header>
+
+  <main>
+    <a class="voltar" href="utilitarios.html">Voltar para utilitários</a>
+    <h1>Usuários da fazenda</h1>
+    <p class="sub">Quem pode entrar no sistema. Só o Dono da fazenda vê esta página.</p>
+
+    <div class="barra-acoes">
+      <div class="botoes"><button type="button" id="btnNovo">Cadastrar usuário</button></div>
+    </div>
+    <p class="erro" id="erroPagina" role="alert" hidden></p>
+
+    <div class="tabela-area">
+      <table>
+        <thead><tr><th>Nome</th><th>Usuário</th><th>Perfil</th><th>Situação</th><th>Ações</th></tr></thead>
+        <tbody id="corpo"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <dialog id="modalNovo">
+    <form id="formNovo" novalidate>
+      <h2>Cadastrar usuário</h2>
+      <div class="grade">
+        <div class="campo largo"><label for="nNome">Nome</label><input id="nNome" autocomplete="off"></div>
+        <div class="campo"><label for="nUsuario">Usuário (login)</label><input id="nUsuario" autocomplete="off" autocapitalize="none"></div>
+        <div class="campo"><label for="nNivel">Perfil</label>
+          <select id="nNivel"><option value="funcionario">Funcionário</option><option value="gerente">Gerente</option></select></div>
+        <div class="campo largo"><label for="nCargo">Cargo (opcional)</label><input id="nCargo" autocomplete="off"></div>
+      </div>
+      <p class="erro" id="erroNovo" role="alert" hidden></p>
+      <div class="rodape-modal">
+        <button type="button" class="secundario" data-fechar="modalNovo">Cancelar</button>
+        <button type="submit">Criar usuário</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="modalSenha">
+    <h2 id="tituloSenha">Senha temporária</h2>
+    <p id="textoSenha"></p>
+    <code class="senha-temp" id="senhaTemp"></code>
+    <p class="aviso-senha">Ela aparece só desta vez. Anote e entregue ao usuário: no primeiro acesso ele será obrigado a trocá-la.</p>
+    <div class="rodape-modal">
+      <button type="button" class="secundario" id="btnCopiar">Copiar</button>
+      <button type="button" data-fechar="modalSenha">Já anotei</button>
+    </div>
+  </dialog>
+
+  <dialog id="modalPerfil">
+    <h2>Mudar perfil</h2>
+    <p class="nome-modal" id="perfilNome"></p>
+    <div class="campo"><label for="novoNivel">Novo perfil</label>
+      <select id="novoNivel"><option value="funcionario">Funcionário</option><option value="gerente">Gerente</option></select></div>
+    <p class="erro" id="erroPerfil" role="alert" hidden></p>
+    <div class="rodape-modal">
+      <button type="button" class="secundario" data-fechar="modalPerfil">Cancelar</button>
+      <button type="button" id="okPerfil">Confirmar</button>
+    </div>
+  </dialog>
+
+  <dialog id="modalConfirma">
+    <h2 id="confirmaTitulo"></h2>
+    <p id="confirmaTexto"></p>
+    <p class="erro" id="erroConfirma" role="alert" hidden></p>
+    <div class="rodape-modal">
+      <button type="button" class="secundario" data-fechar="modalConfirma">Cancelar</button>
+      <button type="button" id="okConfirma">Confirmar</button>
+    </div>
+  </dialog>
+
+  <script src="../scripts/sessao.js"></script>
+  <script src="../scripts/usuarios.js"></script>
+</body>
+</html>

@@ -34,13 +34,9 @@ app.mount(
 )
 
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Login por fazenda, sessões e proteção de TODAS as rotas (etapa 1)
+from autenticacao import instalar_autenticacao, exigir_dono
+instalar_autenticacao(app)
 
 STATUS_ANIMAL = ("Ativo", "Tratamento", "Seca", "Prenha", "Abate")
 STATUS_MAQUINA = ("Ativo", "Manutenção", "Encostado")
@@ -48,8 +44,7 @@ TIPOS_MOVIMENTACAO = ("Entrada", "Saída")
 
 
 # ---------- Banco ----------
-def conectar():
-    return sqlite3.connect("banco.db")   # o mesmo caminho do CAMINHO_BANCO em logs.py
+from banco_fazenda import conectar   # abre o banco da fazenda de quem está logado
 
 
 def consultar(sql, params=()):
@@ -434,8 +429,8 @@ def consultar_funcionario(funcionario_id: int):
     return r[0]
 
 
-@app.post("/cadastrarFuncionario", status_code=201)
-def cadastrar_funcionario(f: dict):
+# Rota antiga desligada: agora POST /cadastrarFuncionario vem de funcionarios_acesso.py (cria o funcionário e o login).
+def cadastrar_funcionario_antigo(f: dict):
     cpf = "".join(c for c in (f.get("cpf") or "") if c.isdigit())   # só os dígitos
     if cpf and consultar("SELECT id FROM funcionarios WHERE cpf = ? AND ativo = 1", (cpf,)):
         raise HTTPException(status_code=409, detail="Já existe um funcionário com esse CPF.")
@@ -569,6 +564,7 @@ def excluir_lote(lote_id: int):
 # ---------- Utilitários: backup ----------
 @app.get("/backup")
 def backup():
+    exigir_dono()
     origem = conectar()
     fd, caminho = tempfile.mkstemp(suffix=".db")
     os.close(fd)
@@ -616,14 +612,7 @@ TURNO_TARDE = "Tarde"
 _VACAS_LEITE = "a.ativo = 1 AND a.sexo LIKE 'F%' AND a.tipo LIKE 'Leite'"
 
 
-def _garantir_coluna_responsavel_leite():
-    # o formulário de medição grava quem lançou; cria a coluna se ela ainda não existir
-    colunas = [c["name"] for c in consultar("PRAGMA table_info(producao_leite)")]
-    if colunas and "responsavel" not in colunas:
-        executar("ALTER TABLE producao_leite ADD COLUMN responsavel TEXT")
-
-
-_garantir_coluna_responsavel_leite()
+# a coluna producao_leite.responsavel agora é criada por esquema_fazenda.garantir_esquema
 
 
 # ---------- Auxiliares do leite ----------

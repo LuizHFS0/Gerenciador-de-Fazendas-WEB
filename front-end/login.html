@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar | FazendaWEB</title>
+  <style>
+    :root {
+      --campo: #2f4a2b; --campo-escuro: #213520; --palha: #e9e4d2; --terra: #8a5a2b;
+      --fundo: #f3f1ea; --papel: #ffffff; --texto: #26302a; --suave: #6a7468;
+      --linha: #dcd8c8; --alerta: #b4561f; --dourado: #d9b25f;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { min-height: 100vh; display: grid; place-items: center; padding: 24px;
+           font-family: "Trebuchet MS", "Segoe UI", Tahoma, sans-serif; background: var(--fundo);
+           color: var(--texto); line-height: 1.5; }
+    main { width: min(400px, 100%); }
+    .marca { font-size: 1.3rem; font-weight: 700; color: var(--campo); margin-bottom: 18px; }
+    form { background: var(--papel); border: 1px solid var(--linha); border-top: 6px solid var(--dourado);
+           border-radius: 6px; padding: 26px 26px 22px; }
+    h1 { font-size: 1.25rem; margin-bottom: 4px; }
+    .sub { color: var(--suave); font-size: .92rem; margin-bottom: 18px; }
+    .campo { display: flex; flex-direction: column; gap: 3px; margin-bottom: 14px; }
+    label { font-weight: 700; font-size: .9rem; }
+    input { font: inherit; padding: 9px 10px; border: 1px solid var(--linha); border-radius: 6px;
+            background: var(--papel); color: var(--texto); }
+    input:focus-visible, button:focus-visible { outline: 2px solid var(--campo); outline-offset: 2px; }
+    button { width: 100%; font: inherit; font-weight: 700; padding: 10px; border: 0; border-radius: 6px;
+             background: var(--campo); color: var(--palha); cursor: pointer; margin-top: 4px; }
+    button:hover { background: var(--campo-escuro); }
+    button:disabled { opacity: .6; cursor: wait; }
+    .erro { color: var(--alerta); font-weight: 700; font-size: .92rem; margin-bottom: 12px; }
+    .aviso { background: var(--palha); border-left: 4px solid var(--terra); padding: 10px 12px;
+             border-radius: 4px; font-size: .92rem; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="marca">FazendaWEB</div>
+    <form id="formLogin" novalidate>
+      <h1>Entrar</h1>
+      <p class="sub">Use o código da sua fazenda e o seu usuário.</p>
+      <p class="aviso" id="aviso" hidden></p>
+      <div class="campo">
+        <label for="fazenda">Código da fazenda</label>
+        <input id="fazenda" autocomplete="organization" autocapitalize="none" spellcheck="false">
+      </div>
+      <div class="campo">
+        <label for="usuario">Usuário</label>
+        <input id="usuario" autocomplete="username" autocapitalize="none" spellcheck="false">
+      </div>
+      <div class="campo">
+        <label for="senha">Senha</label>
+        <input id="senha" type="password" autocomplete="current-password">
+      </div>
+      <p class="erro" id="erro" role="alert" hidden></p>
+      <button type="submit" id="btnEntrar">Entrar</button>
+    </form>
+  </main>
+
+  <script>
+    // os scripts do sistema chamam a API em 127.0.0.1: o login precisa estar no mesmo endereço
+    if (location.hostname === "localhost") location.replace(location.href.replace("localhost", "127.0.0.1"));
+
+    const $ = id => document.getElementById(id);
+    const params = new URLSearchParams(location.search);
+
+    if (params.get("motivo") === "desativada") {
+      $("aviso").textContent = "O acesso desta fazenda está desativado. Fale com o suporte.";
+      $("aviso").hidden = false;
+    }
+    try { $("fazenda").value = localStorage.getItem("fw_codigo") || ""; } catch (e) { /* sem armazenamento */ }
+    ($("fazenda").value ? $("usuario") : $("fazenda")).focus();
+
+    function destinoSeguro() {
+      const p = params.get("proximo");
+      return p && p.startsWith("/") && !p.startsWith("//") && !p.includes("\\") ? p : "/front-end/dashboard.html";
+    }
+
+    $("formLogin").addEventListener("submit", async e => {
+      e.preventDefault();
+      $("erro").hidden = true;
+      const dados = { fazenda: $("fazenda").value.trim(), usuario: $("usuario").value.trim(), senha: $("senha").value };
+      if (!dados.fazenda || !dados.usuario || !dados.senha) {
+        $("erro").textContent = "Preencha o código da fazenda, o usuário e a senha.";
+        $("erro").hidden = false;
+        return;
+      }
+      $("btnEntrar").disabled = true;
+      try {
+        const resposta = await fetch("/api/auth/login", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(dados)
+        });
+        const corpo = await resposta.json().catch(() => ({}));
+        if (!resposta.ok) throw new Error(corpo.detail || "Não foi possível entrar.");
+        try { localStorage.setItem("fw_codigo", dados.fazenda); } catch (e) { /* ignora */ }
+        location.href = corpo.trocar_senha ? "/front-end/trocar-senha.html" : destinoSeguro();
+      } catch (erro) {
+        $("erro").textContent = erro.message;
+        $("erro").hidden = false;
+        $("senha").value = "";
+        $("btnEntrar").disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

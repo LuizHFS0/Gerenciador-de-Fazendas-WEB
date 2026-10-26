@@ -1,6 +1,7 @@
 const API = "http://127.0.0.1:8000";
 const funcionarios = [];
 let selecionadoId = null;
+let codigoFazenda = null;
 
 const $ = id => document.getElementById(id);
 
@@ -55,7 +56,7 @@ function desenharTabela() {
   });
 }
 
-// ---------- Cadastrar ----------
+// ---------- Cadastrar (já cria o acesso ao sistema) ----------
 $("btnCadastrar").addEventListener("click", () => {
   $("formCadastro").reset();
   $("erroCadastro").hidden = true;
@@ -93,13 +94,12 @@ $("formCadastro").addEventListener("submit", async e => {
       })
     });
 
-    if (!resposta.ok) {
-      const erro = await resposta.json().catch(() => ({}));
-      throw new Error(erro.detail || "Erro ao cadastrar o funcionário.");
-    }
+    const dados = await resposta.json().catch(() => ({}));
+    if (!resposta.ok) throw new Error(dados.detail || "Erro ao cadastrar o funcionário.");
 
     $("modalCadastro").close();
     await carregarFuncionarios();
+    if (dados.acesso) await mostrarAcesso(nome, dados.acesso);
   } catch (erro) {
     mostrarErroCadastro(erro.message);
   }
@@ -109,6 +109,37 @@ function mostrarErroCadastro(mensagem) {
   $("erroCadastro").textContent = mensagem;
   $("erroCadastro").hidden = false;
 }
+
+// ---------- Entrega do acesso (a senha só aparece agora) ----------
+async function descobrirCodigoDaFazenda() {
+  if (codigoFazenda) return codigoFazenda;
+  try {
+    const perfil = await (await fetch(`${API}/api/perfil`)).json();
+    codigoFazenda = perfil.fazenda ? perfil.fazenda.codigo : "";
+  } catch (erro) { codigoFazenda = ""; }
+  return codigoFazenda;
+}
+
+async function mostrarAcesso(nome, acesso) {
+  const fazenda = await descobrirCodigoDaFazenda();
+  $("textoAcesso").textContent = `${nome} já pode entrar no sistema com estes dados:`;
+  $("acFazenda").textContent = fazenda || "-";
+  $("acUsuario").textContent = acesso.usuario;
+  $("acPerfil").textContent = acesso.perfil;
+  $("acSenha").textContent = acesso.senha_temporaria;
+  $("btnCopiarAcesso").textContent = "Copiar acesso";
+  $("modalAcesso").showModal();
+}
+
+$("btnCopiarAcesso").addEventListener("click", async () => {
+  const texto = `Código da fazenda: ${$("acFazenda").textContent}\nUsuário: ${$("acUsuario").textContent}\nSenha temporária: ${$("acSenha").textContent}`;
+  try {
+    await navigator.clipboard.writeText(texto);
+    $("btnCopiarAcesso").textContent = "Copiado";
+  } catch (erro) {
+    $("btnCopiarAcesso").textContent = "Selecione e copie";
+  }
+});
 
 // ---------- Informações ----------
 $("btnInformacoes").addEventListener("click", () => {
