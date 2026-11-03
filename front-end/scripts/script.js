@@ -7,6 +7,18 @@ function definirTexto(seletor, valor) {
   el.textContent = valor;
 }
 
+function formatarData(iso) {
+  if (!iso || typeof iso !== "string") return "-";
+  const [ano, mes, dia] = iso.slice(0, 10).split("-");
+  return `${dia}/${mes}/${ano}`;
+}
+
+function formatarDataHora(texto) {
+  if (!texto) return "-";
+  const hora = texto.slice(11, 16);
+  return hora ? `${formatarData(texto)} ${hora}` : formatarData(texto);
+}
+
 async function carregarDashboard() {
   try {
     const resposta = await fetch('http://127.0.0.1:8000/dashboard');
@@ -23,35 +35,27 @@ async function carregarDashboard() {
 }
 
 async function desenharTabela() {
-  const resposta = await fetch('http://127.0.0.1:8000/movimentacoesDashboard');
-  const movimentacoes = await resposta.json();
-  const termo = normalizar($("busca").value.trim());
-  const lista = movimentacoes.filter(m => !termo || normalizar(m.item).includes(termo));
+  try {
+    const resposta = await fetch('http://127.0.0.1:8000/obterLogsEstoque?limite=5');
+    const dados = await resposta.json();
+    document.getElementById("corpoTabela").innerHTML = "";
 
-  $("corpoTabela").innerHTML = "";
-
-  if (lista.length === 0) {
-    $("corpoTabela").innerHTML = '<tr><td class="vazio" colspan="9">Nenhuma movimentação encontrada.</td></tr>';
-    return;
-  }
-
-  lista.forEach(m => {
-    const tr = document.createElement("tr");
-    if (m.id === selecionadoId) tr.classList.add("selecionada");
-
-    [, formatarHoras(m.horas_uso)]
-      .forEach(valor => {
-        const td = document.createElement("td");
-        td.textContent = valor ?? "-";
-        tr.appendChild(td);
-      });
-
-    tr.addEventListener("click", () => {
-      selecionadoId = m.id;
-      desenharTabela();
+    if (dados.logs.length === 0) {
+      document.getElementById("corpoTabela").innerHTML = '<tr><td class="vazio" colspan="9">Nenhuma movimentação encontrada.</td></tr>';
+      return;
+    }
+    dados.logs.forEach(m => {
+      const tr = document.createElement("tr");
+      [formatarDataHora(m.data_hora), m.acao || "-", m.nome_usuario || "-", m.descricao || "-"].forEach(valor => {
+          const td = document.createElement("td");
+          td.textContent = valor ?? "-";
+          tr.appendChild(td);
+        });
+      document.getElementById("corpoTabela").appendChild(tr);
     });
-    $("corpoTabela").appendChild(tr);
-  });
+  } catch (erro) {
+    console.error("Falha ao carregar movimentações:", erro);
+  }
 }
 
 carregarDashboard();

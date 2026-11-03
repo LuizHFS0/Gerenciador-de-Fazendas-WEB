@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fazendas | Administração FazendaWEB</title>
+  <link rel="stylesheet" href="estilo/admin.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">FazendaWEB <small>Administração</small></div>
+    <nav aria-label="Navegação do painel" style="display:contents">
+      <ul class="menu">
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="fazendas.html" class="ativo" aria-current="page">Fazendas</a></li>
+        <li><a href="auditoria.html">Auditoria</a></li>
+      </ul>
+    </nav>
+    <div class="usuario"><span class="avatar" aria-hidden="true">A</span><span>Admin</span></div>
+  </header>
+
+  <main>
+    <h1>Fazendas</h1>
+    <p class="sub">Nome, funcionários (só a quantidade), plano, pagamento e estado de cada fazenda. Nenhum dado interno delas aparece aqui.</p>
+
+    <div class="filtros">
+      <div class="campo"><label for="busca">Pesquisar</label><input type="search" id="busca" placeholder="Nome ou código" autocomplete="off"></div>
+      <div class="campo"><label for="fPlano">Plano</label><select id="fPlano"><option value="">Todos</option></select></div>
+      <div class="campo"><label for="fPagamento">Pagamento</label>
+        <select id="fPagamento"><option value="">Todos</option><option value="em_dia">Em dia</option><option value="pendente">Pendente</option></select></div>
+      <div class="campo"><label for="fSituacao">Situação</label>
+        <select id="fSituacao"><option value="">Todas</option><option value="ativa">Ativas</option><option value="desativada">Desativadas</option></select></div>
+      <div class="campo"><label for="fOrdem">Ordenar por</label>
+        <select id="fOrdem"><option value="nome">Nome</option><option value="funcionarios">Funcionários</option><option value="plano">Plano</option>
+          <option value="pagamento">Pagamento</option><option value="criada_em">Data de cadastro</option></select></div>
+      <div class="campo"><label for="fDirecao">Ordem</label>
+        <select id="fDirecao"><option value="asc">Crescente</option><option value="desc">Decrescente</option></select></div>
+      <div class="espaco"></div>
+      <button type="button" id="btnNova">Nova fazenda</button>
+    </div>
+    <p class="erro" id="erroPagina" role="alert" hidden></p>
+
+    <div class="tabela-area">
+      <table>
+        <thead><tr><th>Fazenda</th><th class="num">Funcionários</th><th>Plano</th><th>Pagamento</th><th>Situação</th><th>Ações</th></tr></thead>
+        <tbody id="corpo"></tbody>
+      </table>
+    </div>
+    <div class="paginacao">
+      <span id="infoPagina"></span>
+      <div class="botoes">
+        <label for="fPorPagina" class="dica">Por página</label>
+        <select id="fPorPagina"><option>10</option><option>25</option><option>50</option></select>
+        <button type="button" class="secundario" id="btnAnterior">Anterior</button>
+        <span id="numeroPagina"></span>
+        <button type="button" class="secundario" id="btnProxima">Próxima</button>
+      </div>
+    </div>
+  </main>
+
+  <dialog id="modalNova">
+    <form id="formNova" novalidate>
+      <h2>Cadastrar fazenda</h2>
+      <p class="dica">Use depois de verificar o pagamento. O cadastro cria a fazenda e a conta inicial do Dono, que depois administra os próprios usuários.</p>
+      <div class="grade">
+        <div class="campo"><label for="nNome">Nome da fazenda</label><input id="nNome" maxlength="100" autocomplete="off"></div>
+        <div class="campo"><label for="nCodigo">Código de acesso</label><input id="nCodigo" maxlength="30" autocomplete="off" autocapitalize="none" spellcheck="false"></div>
+        <div class="campo"><label for="nPlano">Plano</label><select id="nPlano"></select></div>
+        <div class="campo"><label for="nPagamento">Pagamento inicial</label>
+          <select id="nPagamento"><option value="em_dia">Em dia</option><option value="pendente">Pendente</option></select></div>
+        <div class="campo"><label for="nContatoNome">Contato (nome)</label><input id="nContatoNome" maxlength="100" autocomplete="off"></div>
+        <div class="campo"><label for="nContatoTelefone">Contato (telefone)</label><input id="nContatoTelefone" maxlength="30" autocomplete="off"></div>
+        <div class="campo largo"><label for="nContatoEmail">Contato (e-mail)</label><input id="nContatoEmail" type="email" maxlength="120" autocomplete="off"></div>
+        <div class="campo largo"><label for="nObs">Observações administrativas</label><textarea id="nObs" rows="2" maxlength="500"></textarea></div>
+        <div class="campo largo"><label for="nDono">Nome completo do Dono</label><input id="nDono" maxlength="100" autocomplete="off">
+          <span class="dica">O usuário dele é gerado a partir do nome (Primeiro.Ultimo) e a senha é temporária.</span></div>
+        <div class="campo largo"><label class="marcar"><input type="checkbox" id="nVerificado"> Confirmo que verifiquei o pagamento e autorizo este cadastro.</label></div>
+        <div class="campo largo"><label for="nSenha">Sua senha de SuperAdmin (confirmação)</label><input id="nSenha" type="password" autocomplete="current-password"></div>
+      </div>
+      <p class="erro" id="erroNova" role="alert" hidden></p>
+      <div class="rodape-modal">
+        <button type="button" class="secundario" data-fechar="modalNova">Cancelar</button>
+        <button type="submit" id="btnSalvarNova">Cadastrar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="modalAcesso">
+    <h2 id="acTitulo">Acesso do Dono</h2>
+    <p id="acTexto"></p>
+    <dl>
+      <dt>Fazenda</dt><dd id="acFazenda"></dd>
+      <dt>Código de acesso</dt><dd id="acCodigo"></dd>
+      <dt>Usuário do Dono</dt><dd id="acUsuario"></dd>
+    </dl>
+    <p><strong>Senha temporária</strong></p>
+    <code class="senha-temp" id="acSenha"></code>
+    <p class="aviso-senha">A senha aparece só agora. Entregue ao Dono: no primeiro acesso ele será obrigado a trocá-la.</p>
+    <div class="rodape-modal">
+      <button type="button" class="secundario" id="btnCopiarAcesso">Copiar acesso</button>
+      <button type="button" data-fechar="modalAcesso">Já anotei</button>
+    </div>
+  </dialog>
+
+  <dialog id="modalConfirma">
+    <h2 id="confirmaTitulo"></h2>
+    <p id="confirmaTexto"></p>
+    <p class="erro" id="erroConfirma" role="alert" hidden></p>
+    <div class="rodape-modal">
+      <button type="button" class="secundario" data-fechar="modalConfirma">Cancelar</button>
+      <button type="button" id="okConfirma">Confirmar</button>
+    </div>
+  </dialog>
+
+  <dialog id="modalEscolha">
+    <h2 id="escolhaTitulo"></h2>
+    <p id="escolhaNome" class="dica"></p>
+    <div class="campo"><label for="escolhaSelect" id="escolhaRotulo"></label><select id="escolhaSelect"></select></div>
+    <p class="erro" id="erroEscolha" role="alert" hidden></p>
+    <div class="rodape-modal">
+      <button type="button" class="secundario" data-fechar="modalEscolha">Cancelar</button>
+      <button type="button" id="okEscolha">Salvar</button>
+    </div>
+  </dialog>
+
+  <dialog id="modalReemitir">
+    <h2>Nova senha temporária do Dono</h2>
+    <p id="reemitirNome" class="dica"></p>
+    <p>Só funciona enquanto o Dono ainda não trocou a senha. Depois que ele ativar o acesso, o painel não consegue mais redefini-la.</p>
+    <div class="campo"><label for="reemitirSenha">Sua senha de SuperAdmin (confirmação)</label><input id="reemitirSenha" type="password" autocomplete="current-password"></div>
+    <p class="erro" id="erroReemitir" role="alert" hidden></p>
+    <div class="rodape-modal">
+      <button type="button" class="secundario" data-fechar="modalReemitir">Cancelar</button>
+      <button type="button" id="okReemitir">Gerar nova senha</button>
+    </div>
+  </dialog>
+
+  <script src="scripts/admin-config.js"></script>
+  <script src="scripts/sessao.js"></script>
+  <script src="scripts/admin-comum.js"></script>
+  <script src="scripts/admin-fazendas.js"></script>
+</body>
+</html>

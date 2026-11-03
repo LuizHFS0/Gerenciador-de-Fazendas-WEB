@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Administração | FazendaWEB</title>
+  <style>
+    :root { --marinho: #1d2b3a; --marinho-escuro: #14202c; --dourado: #d9b25f; --fundo: #f1f3f4; --texto: #1f2933; --suave: #62707e; --linha: #d9dee2; --alerta: #b4561f; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { min-height: 100vh; display: grid; place-items: center; padding: 24px; font-family: "Trebuchet MS", "Segoe UI", Tahoma, sans-serif; background: var(--marinho); color: var(--texto); line-height: 1.5; }
+    main { width: min(400px, 100%); }
+    .marca { color: #e8edf1; font-size: 1.3rem; font-weight: 700; margin-bottom: 16px; }
+    .marca small { margin-left: 8px; padding: 1px 9px; border-radius: 10px; background: var(--dourado); color: var(--marinho-escuro); font-size: .72rem; vertical-align: middle; }
+    form { background: #fff; border-top: 6px solid var(--dourado); border-radius: 6px; padding: 26px 26px 22px; }
+    h1 { font-size: 1.25rem; margin-bottom: 4px; }
+    .sub { color: var(--suave); font-size: .92rem; margin-bottom: 18px; }
+    .campo { display: flex; flex-direction: column; gap: 3px; margin-bottom: 14px; }
+    label { font-weight: 700; font-size: .9rem; }
+    input { font: inherit; padding: 9px 10px; border: 1px solid var(--linha); border-radius: 6px; }
+    input:focus-visible, button:focus-visible { outline: 2px solid var(--marinho); outline-offset: 2px; }
+    button { width: 100%; font: inherit; font-weight: 700; padding: 10px; border: 0; border-radius: 6px; background: var(--marinho); color: #fff; cursor: pointer; margin-top: 4px; }
+    button:hover { background: var(--marinho-escuro); }
+    button:disabled { opacity: .6; cursor: wait; }
+    .erro { color: var(--alerta); font-weight: 700; font-size: .92rem; margin-bottom: 12px; }
+    .rodape { margin-top: 14px; color: var(--suave); font-size: .82rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="marca">FazendaWEB <small>Administração</small></div>
+    <form id="formLogin" novalidate>
+      <h1>Acesso do SuperAdmin</h1>
+      <p class="sub">Área restrita à administração da plataforma.</p>
+      <div class="campo"><label for="usuario">Usuário</label><input id="usuario" autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+      <div class="campo"><label for="senha">Senha</label><input id="senha" type="password" autocomplete="current-password"></div>
+      <p class="erro" id="erro" role="alert" hidden></p>
+      <button type="submit" id="btnEntrar">Entrar</button>
+      <p class="rodape">Este login não dá acesso aos dados das fazendas.</p>
+    </form>
+  </main>
+  <script>
+    const $ = id => document.getElementById(id);
+    $("usuario").focus();
+    $("formLogin").addEventListener("submit", async e => {
+      e.preventDefault();
+      $("erro").hidden = true;
+      const usuario = $("usuario").value.trim(), senha = $("senha").value;
+      if (!usuario || !senha) { $("erro").textContent = "Preencha o usuário e a senha."; $("erro").hidden = false; return; }
+      $("btnEntrar").disabled = true;
+      try {
+        const r = await fetch("/admin/api/login", { method: "POST",
+          headers: { "Content-Type": "application/json", "X-Requested-With": "FazendaWEB-Admin" },
+          body: JSON.stringify({ usuario, senha }) });
+        const corpo = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(corpo.detail || "Não foi possível entrar.");
+        location.href = "/admin/dashboard.html";
+      } catch (erro) {
+        $("erro").textContent = erro.message; $("erro").hidden = false;
+        $("senha").value = ""; $("btnEntrar").disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

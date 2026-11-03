@@ -18,12 +18,16 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from starlette.concurrency import run_in_threadpool
 
+import auditoria
 import banco_fazenda as bf
+import caminhos
+import configuracao
 import contas
 import permissoes
 import ponte_admin
 import senhas
 from logs import registrar_log
+from seguranca_http import instalar_seguranca
 from funcionarios_acesso import router as rotas_funcionarios
 from perfil import router as rotas_perfil
 
@@ -36,8 +40,6 @@ NIVEIS_CRIAVEIS = ("gerente", "funcionario")
 METODOS_SEGUROS = ("GET", "HEAD", "OPTIONS")
 PUBLICAS = {("POST", "/api/auth/login"), ("POST", "/api/auth/logout"), ("GET", PAGINA_LOGIN)}
 LIBERADAS_NA_TROCA = {"/api/auth/eu", "/api/auth/trocar-senha", PAGINA_TROCA}
-# origens extras aceitas em escrita (atrás de proxy com HTTPS, por exemplo), separadas por vírgula
-ORIGENS_EXTRAS = {o.strip() for o in os.environ.get("FAZENDAWEB_ORIGENS", "").split(",") if o.strip()}
 
 JANELA_FALHAS = 15 * 60
 MAX_FALHAS_USUARIO = 5
@@ -135,7 +137,7 @@ def sincronizar_contador(fazenda_id):
             n = conn.execute("SELECT COUNT(*) FROM funcionarios WHERE ativo = 1").fetchone()[0]
         finally:
             conn.close()
-        chave = (str(bf.DADOS), fazenda_id)
+        chave = (str(caminhos.dados()), fazenda_id)
         if _ultimo_contador.get(chave) != n:
             ponte_admin.atualizar_funcionarios(fazenda_id, n)
             _ultimo_contador[chave] = n
@@ -154,7 +156,7 @@ def _origem_permitida(request):
         return True                                    # clientes que não são navegador
     if origem == f"{request.url.scheme}://{request.url.netloc}":
         return True                                    # mesma origem
-    return origem in ORIGENS_EXTRAS
+    return origem in configuracao.origens_extras()
 
 
 def _negar(request, status, detalhe, codigo):
@@ -183,6 +185,11 @@ def _cabecalhos(resposta):
 async def middleware(request: Request, call_next):
     metodo, caminho = request.method, request.url.path
 
+    if caminho == "/admin" or caminho.startswith("/admin/"):
+        # painel do SuperAdmin: autenticação PRÓPRIA (admin_app). Aqui não se cria contexto de fazenda:
+        # qualquer tentativa de abrir um banco de fazenda a partir do admin falha (conectar() exige login de fazenda).
+        return _cabecalhos(await call_next(request))
+
     # CSRF: escrita vinda de outro site é recusada (o cookie também é SameSite=Lax)
     if metodo not in METODOS_SEGUROS and not _origem_permitida(request):
         return _cabecalhos(JSONResponse({"detail": "Origem não permitida."}, status_code=403))
@@ -203,6 +210,8 @@ async def middleware(request: Request, call_next):
                                   "trocar_senha"))
 
     if not permissoes.permitido(sessao["nivel"], metodo, caminho):
+        auditoria.registrar("acesso_negado", f"{metodo} {caminho}", usuario_id=sessao["id"], usuario_texto=sessao["usuario"],
+                            ip=_ip(request), fazenda_id=sessao["fazenda_id"])
         return _cabecalhos(_negar(request, 403, "Seu perfil não tem permissão para isso.", "sem_permissao"))
 
     if caminho == "/" and metodo == "GET":
@@ -232,7 +241,11 @@ auth = APIRouter(prefix="/api/auth", tags=["autenticação"])
 
 
 def _cookie_seguro(request):
-    return request.url.scheme == "https" or os.environ.get("FAZENDAWEB_COOKIE_SECURE") == "1"
+    return configuracao.cookie_seguro(request.url.scheme)
+
+
+def _ip(request):
+    return configuracao.ip_do_cliente(request.headers, request.client)
 
 
 @auth.post("/login")
@@ -240,10 +253,11 @@ def login(request: Request, dados: dict):
     codigo = str(dados.get("fazenda") or "").strip().lower()
     usuario = str(dados.get("usuario") or "").strip()
     senha = str(dados.get("senha") or "")
-    ip = request.client.host if request.client else "?"
+    ip = _ip(request)
     chave_usuario, chave_ip = ("u", ip, codigo, usuario.lower()), ("ip", ip)
 
     if _bloqueado(chave_usuario, chave_ip):
+        auditoria.registrar("login_bloqueado", "muitas tentativas", usuario_texto=usuario, ip=ip)
         raise HTTPException(status_code=429, detail="Muitas tentativas. Aguarde alguns minutos e tente de novo.")
 
     fazenda = ponte_admin.buscar_por_codigo(codigo) if codigo else None
@@ -259,8 +273,12 @@ def login(request: Request, dados: dict):
         confere, atualizar = senhas.verificar(senha, linha[2] if linha else senhas.HASH_FALSO)
         if not (conn is not None and linha and linha[4] and confere):
             _registrar_falha(chave_usuario, chave_ip)
+            auditoria.registrar("login_falhou", f"fazenda={auditoria.limpar(codigo, 40)}", usuario_texto=usuario, ip=ip,
+                                fazenda_id=fazenda["id"] if fazenda else None)
             raise HTTPException(status_code=401, detail="Fazenda, usuário ou senha inválidos.")
         if not fazenda["ativa"]:
+            auditoria.registrar("login_fazenda_desativada", "", usuario_id=linha[0], usuario_texto=usuario, ip=ip,
+                                fazenda_id=fazenda["id"])
             raise HTTPException(status_code=403,
                                 detail="O acesso desta fazenda está desativado. Fale com o suporte.")
         if atualizar:
@@ -272,6 +290,7 @@ def login(request: Request, dados: dict):
             conn.close()
 
     _falhas.pop(chave_usuario, None)
+    auditoria.registrar("login_ok", "", usuario_id=linha[0], usuario_texto=usuario, ip=ip, fazenda_id=fazenda["id"])
     sincronizar_contador(fazenda["id"])
     resposta = JSONResponse({
         "usuario": {"nome": linha[1], "nivel": permissoes.nivel_efetivo(linha[3])},
@@ -285,7 +304,11 @@ def login(request: Request, dados: dict):
 @auth.post("/logout")
 def logout(request: Request):
     try:
+        quem = carregar_sessao(request.cookies.get(COOKIE))
         _encerrar_sessao(request.cookies.get(COOKIE))
+        if quem:
+            auditoria.registrar("logout", "", usuario_id=quem["id"], usuario_texto=quem["usuario"], ip=_ip(request),
+                                fazenda_id=quem["fazenda_id"])
     except Exception as erro:
         print("Falha ao encerrar a sessão:", erro)
     resposta = JSONResponse({"message": "Sessão encerrada."})
@@ -294,7 +317,7 @@ def logout(request: Request):
 
 
 @auth.post("/logout-todas")
-def logout_todas():
+def logout_todas(request: Request):
     """Encerra TODAS as sessões do usuário (todos os aparelhos), inclusive a atual."""
     usuario = bf.usuario_atual()
     conn = bf.conectar()
@@ -304,6 +327,8 @@ def logout_todas():
     finally:
         conn.close()
     registrar_log("Alteração", "usuarios", f'Usuário "{usuario["usuario"]}" saiu de todos os dispositivos')
+    auditoria.registrar("logout_todas", "", usuario_id=usuario["id"], usuario_texto=usuario["usuario"], ip=_ip(request),
+                        fazenda_id=usuario["fazenda_id"])
     resposta = JSONResponse({"message": "Todas as sessões foram encerradas."})
     resposta.delete_cookie(COOKIE, path="/")
     return resposta
@@ -343,6 +368,8 @@ def trocar_senha(request: Request, dados: dict):
     finally:
         conn.close()
     registrar_log("Alteração", "usuarios", f'Usuário "{usuario["usuario"]}" trocou a própria senha')
+    auditoria.registrar("senha_trocada", "", usuario_id=usuario["id"], usuario_texto=usuario["usuario"], ip=_ip(request),
+                        fazenda_id=usuario["fazenda_id"])
     return {"message": "Senha alterada!"}
 
 
@@ -455,3 +482,7 @@ def instalar_autenticacao(app):
     app.include_router(usuarios)
     app.include_router(rotas_perfil)
     app.include_router(rotas_funcionarios)
+    instalar_seguranca(app)
+    if configuracao.admin_habilitado():
+        from admin_app import montar_admin
+        montar_admin(app)

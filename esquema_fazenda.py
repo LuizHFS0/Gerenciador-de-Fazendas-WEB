@@ -182,6 +182,20 @@ TABELAS = [
         dados BLOB NOT NULL,
         atualizada_em INTEGER NOT NULL,
         FOREIGN KEY(usuario_id) REFERENCES usuarios(id))""",
+    # auditoria de segurança desta fazenda (entradas, falhas, acessos negados); nunca guarda senha nem token
+    """CREATE TABLE IF NOT EXISTS auditoria(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        quando TEXT NOT NULL,
+        evento TEXT NOT NULL,
+        usuario_id INTEGER,
+        usuario_texto TEXT,
+        ip TEXT,
+        detalhe TEXT)""",
+    "CREATE INDEX IF NOT EXISTS idx_auditoria_quando ON auditoria(id DESC)",
+    """CREATE TABLE IF NOT EXISTS schema_versao(
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        versao INTEGER NOT NULL,
+        atualizada_em TEXT NOT NULL)""",
     "CREATE INDEX IF NOT EXISTS idx_sessoes_usuario ON sessoes(usuario_id)",
     "CREATE INDEX IF NOT EXISTS idx_leite_chave ON producao_leite(animal_id, data_producao, turno)",
 ]
@@ -197,6 +211,10 @@ COLUNAS_NOVAS = [
 ]
 
 
+# 1 = etapa 1 (base) | 2 = fotos e funcionarios.usuario_id | 3 = auditoria e controle de versão
+SCHEMA_VERSAO = 3
+
+
 def garantir_esquema(conn):
     for ddl in TABELAS:
         conn.execute(ddl)
@@ -204,4 +222,7 @@ def garantir_esquema(conn):
         existentes = {linha[1] for linha in conn.execute(f"PRAGMA table_info({tabela})")}
         if coluna not in existentes:
             conn.execute(f"ALTER TABLE {tabela} ADD COLUMN {coluna} {definicao}")
+    conn.execute("""INSERT INTO schema_versao (id, versao, atualizada_em) VALUES (1, ?, datetime('now', 'localtime'))
+                    ON CONFLICT(id) DO UPDATE SET versao = excluded.versao, atualizada_em = excluded.atualizada_em""",
+                 (SCHEMA_VERSAO,))
     conn.commit()

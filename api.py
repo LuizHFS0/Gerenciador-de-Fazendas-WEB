@@ -15,6 +15,7 @@ from xml.sax.saxutils import escape as _escapar
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
+from banco_fazenda import conectar, fazenda_atual
 
 from logs import registrar_log, nome_de
 
@@ -90,6 +91,28 @@ def obter_movimentacoes_dashboard():
            LEFT JOIN estoque i ON i.id = m.item_id
            ORDER BY m.data_movimentacao DESC, m.id DESC LIMIT 5""")
 
+@app.get("/obterLogsEstoque")
+def obterLogsEstoque(limite: int = 5):
+    return {
+        "Fazenda atual: ": f"{fazenda_atual}",
+        "logs": consultar(
+            """
+            SELECT
+                l.acao,
+                l.usuario_id,
+                u.nome AS nome_usuario,
+                l.tabela_afetada,
+                l.descricao,
+                l.data_hora
+            FROM logs l
+            LEFT JOIN usuarios u ON u.id = l.usuario_id
+            WHERE l.tabela_afetada = ?
+            ORDER BY l.data_hora DESC, l.id DESC
+            LIMIT ?
+            """,
+            ("estoque", limite)
+        )
+    }
 
 # ---------- Animais ----------
 @app.get("/consultarAnimais")

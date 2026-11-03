@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard | Administração FazendaWEB</title>
+  <link rel="stylesheet" href="estilo/admin.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">FazendaWEB <small>Administração</small></div>
+    <nav aria-label="Navegação do painel" style="display:contents">
+      <ul class="menu">
+        <li><a href="dashboard.html" class="ativo" aria-current="page">Dashboard</a></li>
+        <li><a href="fazendas.html">Fazendas</a></li>
+        <li><a href="auditoria.html">Auditoria</a></li>
+      </ul>
+    </nav>
+    <div class="usuario"><span class="avatar" aria-hidden="true">A</span><span>Admin</span></div>
+  </header>
+
+  <main>
+    <h1>Visão geral da plataforma</h1>
+    <p class="sub">Somente dados administrativos: o painel não mostra nada de dentro das fazendas.</p>
+    <p class="erro" id="erroPainel" role="alert" hidden></p>
+
+    <div class="indicadores">
+      <div class="indicador"><strong id="indTotal">-</strong><span>Fazendas cadastradas</span></div>
+      <div class="indicador ok"><strong id="indAtivas">-</strong><span>Ativas</span></div>
+      <div class="indicador ruim"><strong id="indDesativadas">-</strong><span>Desativadas</span></div>
+      <div class="indicador ok"><strong id="indEmDia">-</strong><span>Pagamento em dia</span></div>
+      <div class="indicador ruim"><strong id="indPendentes">-</strong><span>Pagamento pendente</span></div>
+      <div class="indicador dourado"><strong id="indFuncionarios">-</strong><span>Funcionários na plataforma</span></div>
+    </div>
+    <div class="aviso" id="avisoPendentes" hidden>
+      <strong id="textoPendentes"></strong> <a href="fazendas.html?pagamento=pendente&amp;situacao=ativa">Ver essas fazendas</a>
+    </div>
+
+    <div class="grade-graficos">
+      <section class="cartao"><h2>Ativas e desativadas</h2><div class="rosca" id="graficoRosca"></div></section>
+      <section class="cartao"><h2>Fazendas por plano</h2><div class="barras" id="graficoPlanos"></div></section>
+    </div>
+    <div class="grade-graficos">
+      <section class="cartao"><h2>Pagamento por plano</h2><div class="barras" id="graficoPagamento"></div>
+        <ul class="legenda" style="margin-top:12px;grid-auto-flow:column;justify-content:start;gap:18px">
+          <li><i class="cor-ok"></i>Em dia</li><li><i class="cor-ruim"></i>Pendente</li></ul></section>
+      <section class="cartao colunas"><h2>Cadastros por mês (últimos 12 meses)</h2><div id="graficoMeses"></div></section>
+    </div>
+
+    <section class="cartao cheio">
+      <h2>Atividade administrativa recente</h2>
+      <div class="tabela-area" style="border:0"><table>
+        <thead><tr><th>Quando</th><th>Ação</th><th>Fazenda</th><th>Quem</th></tr></thead>
+        <tbody id="corpoAtividade"></tbody>
+      </table></div>
+    </section>
+  </main>
+
+  <script src="scripts/admin-config.js"></script>
+  <script src="scripts/sessao.js"></script>
+  <script src="scripts/admin-comum.js"></script>
+  <script src="scripts/admin-dashboard.js"></script>
+</body>
+</html>

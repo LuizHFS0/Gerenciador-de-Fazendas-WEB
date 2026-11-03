@@ -66,6 +66,14 @@ def permitido(nivel, metodo, caminho):
     return n >= NIVEIS["gerente"]                              # rota desconhecida
 
 
+def tem_regra_explicita(metodo, caminho):
+    """True se a rota está listada na política (não cai na regra padrão de 'rota desconhecida')."""
+    metodo = "GET" if metodo == "HEAD" else metodo
+    if caminho == "/" or caminho.startswith(("/front-end/", "/api/auth/", "/api/perfil")):
+        return True
+    return any(metodo in metodos and padrao.match(caminho) for metodos, padrao, _ in POLITICA)
+
+
 def pode_excluir(nivel):
     return NIVEIS[nivel_efetivo(nivel)] >= NIVEIS["gerente"]
 

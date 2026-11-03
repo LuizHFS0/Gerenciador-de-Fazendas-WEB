@@ -5,3 +5,6 @@ __pycache__/
 *.db
 .idea/
 .vscode/
+tests*
+backup*
+*.py.bak*

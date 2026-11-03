@@ -4,14 +4,11 @@ Cada fazenda tem o seu próprio arquivo SQLite (dados/fazendas/<id>.db). O id da
 fazenda vem SEMPRE da sessão validada pelo middleware, nunca de parâmetro da
 requisição. Sem fazenda no contexto, conectar() falha em vez de escolher um banco.
 """
-import os
 import sqlite3
 from contextvars import ContextVar
-from pathlib import Path
 
+import caminhos
 from esquema_fazenda import garantir_esquema
-
-DADOS = Path(os.environ.get("FAZENDAWEB_DADOS") or (Path(__file__).resolve().parent / "dados"))
 
 _fazenda = ContextVar("fazenda_id", default=None)
 _usuario = ContextVar("usuario_logado", default=None)
@@ -20,13 +17,11 @@ _migrados = set()
 
 def configurar_dados(pasta):
     """Troca a pasta de dados (usado nos testes e em scripts)."""
-    global DADOS
-    DADOS = Path(pasta)
-    pasta_fazendas().mkdir(parents=True, exist_ok=True)
+    caminhos.configurar(pasta)
 
 
 def pasta_fazendas():
-    return DADOS / "fazendas"
+    return caminhos.pasta_fazendas()
 
 
 def caminho_banco(fazenda_id):
@@ -61,6 +56,7 @@ def abrir(fazenda_id):
         raise FileNotFoundError(f"Banco da fazenda {fazenda_id} não existe.")
     conn = sqlite3.connect(str(caminho), timeout=10)
     if str(caminho) not in _migrados:
+        conn.execute("PRAGMA journal_mode=WAL")            # leitura não trava escrita (vários usuários ao mesmo tempo)
         garantir_esquema(conn)
         _migrados.add(str(caminho))
     return conn

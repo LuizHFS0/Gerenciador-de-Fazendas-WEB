@@ -1,0 +1,13 @@
+{"t": "2026-11-01 16:54:37", "evento": "login_ok", "fazenda": 2, "usuario_id": 1, "usuario": "Ricardo.Felix", "ip": "127.0.0.1", "detalhe": ""}
+{"t": "2026-11-01 16:54:49", "evento": "senha_trocada", "fazenda": 2, "usuario_id": 1, "usuario": "Ricardo.Felix", "ip": "127.0.0.1", "detalhe": ""}
+{"t": "2026-11-02 20:52:33", "evento": "login_falhou", "fazenda": 2, "usuario_id": null, "usuario": "00lh00", "ip": "127.0.0.1", "detalhe": "fazenda=sonho-meu"}
+{"t": "2026-11-02 20:52:36", "evento": "login_falhou", "fazenda": 2, "usuario_id": null, "usuario": "dono", "ip": "127.0.0.1", "detalhe": "fazenda=sonho-meu"}
+{"t": "2026-11-02 20:52:46", "evento": "login_falhou", "fazenda": 2, "usuario_id": null, "usuario": "Ricardo.Felix", "ip": "127.0.0.1", "detalhe": "fazenda=sonho-meu"}
+{"t": "2026-11-02 20:52:50", "evento": "login_falhou", "fazenda": 2, "usuario_id": null, "usuario": "Ricardo.Felix", "ip": "127.0.0.1", "detalhe": "fazenda=sonho-meu"}
+{"t": "2026-11-02 20:52:52", "evento": "login_falhou", "fazenda": 2, "usuario_id": null, "usuario": "Ricardo.Felix", "ip": "127.0.0.1", "detalhe": "fazenda=sonho-meu"}
+{"t": "2026-11-02 20:54:28", "evento": "login_falhou", "fazenda": 2, "usuario_id": null, "usuario": "Ricardo.Felix", "ip": "127.0.0.1", "detalhe": "fazenda=sonho-meu"}
+{"t": "2026-11-02 20:55:47", "evento": "login_ok", "fazenda": 1, "usuario_id": 2, "usuario": "dono", "ip": "127.0.0.1", "detalhe": ""}
+{"t": "2026-11-02 21:10:43", "evento": "logout", "fazenda": 1, "usuario_id": 2, "usuario": "dono", "ip": "127.0.0.1", "detalhe": ""}
+{"t": "2026-11-02 21:10:56", "evento": "login_ok", "fazenda": 2, "usuario_id": 1, "usuario": "Ricardo.Felix", "ip": "127.0.0.1", "detalhe": ""}
+{"t": "2026-11-02 21:11:52", "evento": "senha_trocada", "fazenda": 2, "usuario_id": 1, "usuario": "Ricardo.Felix", "ip": "127.0.0.1", "detalhe": ""}
+{"t": "2026-11-02 21:12:17", "evento": "senha_trocada", "fazenda": 2, "usuario_id": 1, "usuario": "Ricardo.Felix", "ip": "127.0.0.1", "detalhe": ""}

@@ -4,29 +4,12 @@ O lado das fazendas só LÊ do admin: o código da fazenda (para o login) e se e
 ativa. A única escrita permitida é o contador de funcionários. Nada mais passa por aqui.
 """
 import sqlite3
-from datetime import datetime
 
-import banco_fazenda as bf
+import caminhos
 
 
 def caminho_admin():
-    return bf.DADOS / "admin.db"
-
-
-def garantir_admin_db():
-    bf.DADOS.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(caminho_admin()))
-    try:
-        conn.execute("""CREATE TABLE IF NOT EXISTS fazendas(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            codigo TEXT NOT NULL UNIQUE,
-            nome TEXT NOT NULL,
-            ativa INTEGER NOT NULL DEFAULT 1,
-            funcionarios INTEGER NOT NULL DEFAULT 0,
-            criada_em TEXT)""")
-        conn.commit()
-    finally:
-        conn.close()
+    return caminhos.arquivo_admin()
 
 
 def _somente_leitura():
@@ -74,10 +57,3 @@ def atualizar_funcionarios(fazenda_id, quantidade):
         conn.commit()
     finally:
         conn.close()
-
-
-def registrar_fazenda(conn, fazenda_id, codigo, nome, funcionarios=0):
-    """Usado só pela migração da fazenda 1 e (na etapa 2) pelo cadastro controlado."""
-    conn.execute("""INSERT INTO fazendas (id, codigo, nome, ativa, funcionarios, criada_em)
-                    VALUES (?, ?, ?, 1, ?, ?)""",
-                 (fazenda_id, codigo, nome, funcionarios, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))

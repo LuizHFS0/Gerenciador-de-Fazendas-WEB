@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Auditoria | Administração FazendaWEB</title>
+  <link rel="stylesheet" href="estilo/admin.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">FazendaWEB <small>Administração</small></div>
+    <nav aria-label="Navegação do painel" style="display:contents">
+      <ul class="menu">
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="fazendas.html">Fazendas</a></li>
+        <li><a href="auditoria.html" class="ativo" aria-current="page">Auditoria</a></li>
+      </ul>
+    </nav>
+    <div class="usuario"><span class="avatar" aria-hidden="true">A</span><span>Admin</span></div>
+  </header>
+
+  <main>
+    <h1>Auditoria do painel</h1>
+    <p class="sub">Tudo o que foi feito aqui: entradas, cadastros, ativações e trocas. Senhas e tokens nunca são registrados.</p>
+    <p class="erro" id="erroPagina" role="alert" hidden></p>
+    <div class="tabela-area">
+      <table>
+        <thead><tr><th>Quando</th><th>Ação</th><th>Fazenda ou usuário</th><th>Detalhe</th><th>Quem</th><th>IP</th></tr></thead>
+        <tbody id="corpo"></tbody>
+      </table>
+    </div>
+    <div class="paginacao">
+      <span id="infoPagina"></span>
+      <div class="botoes">
+        <button type="button" class="secundario" id="btnAnterior">Anterior</button>
+        <span id="numeroPagina"></span>
+        <button type="button" class="secundario" id="btnProxima">Próxima</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="scripts/admin-config.js"></script>
+  <script src="scripts/sessao.js"></script>
+  <script src="scripts/admin-comum.js"></script>
+  <script src="scripts/admin-auditoria.js"></script>
+</body>
+</html>
