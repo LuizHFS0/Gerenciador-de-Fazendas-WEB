@@ -1,4 +1,4 @@
-const API = "http://127.0.0.1:8000";
+const API = "";   // mesma origem: a API e o front saem do mesmo servidor
 const maquinas = [];
 let selecionadoId = null;
 

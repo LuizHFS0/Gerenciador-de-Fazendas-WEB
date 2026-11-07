@@ -1,0 +1,5 @@
+# Dependências de execução (Python 3.14, o mesmo do .venv atual).
+# Instalar:  pip install -r requirements.txt
+# Só as diretas ficam fixadas; o resto (starlette, pydantic, anyio...) o pip resolve a partir delas.
+fastapi==0.162.0
+uvicorn==0.54.0

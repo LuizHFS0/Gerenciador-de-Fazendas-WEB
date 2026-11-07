@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Utilitários</title>
-  <link rel="stylesheet" href="../estilo/animais.css">
+  <link rel="stylesheet" href="../estilo/style.css">
 </head>
 <body>
   <header class="topo">
@@ -36,16 +36,13 @@
         <h2>Gestão de lotes</h2>
         <p>Crie, edite e desative os lotes da fazenda.</p>
       </a>
-      <div class="cartao">
-        <h2>Backup do banco</h2>
-        <p>Baixa uma cópia completa dos dados (arquivo .db).</p>
-        <button type="button" id="btnBackup">Baixar backup</button>
-        <p class="erro" id="msgBackup" role="status" hidden></p>
-      </div>
+      <a class="cartao" href="configuracoes.html">
+        <h2>Configurações</h2>
+        <p>Dados da fazenda, logotipo, unidades de medida e preferências de alertas e relatórios.</p>
+      </a>
     </section>
   </main>
 
   <script src="../scripts/sessao.js"></script>
-  <script src="../scripts/utilitarios.js"></script>
 </body>
 </html>

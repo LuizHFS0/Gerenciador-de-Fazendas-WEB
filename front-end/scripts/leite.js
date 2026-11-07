@@ -69,4 +69,9 @@ $("btnPdf").addEventListener("click", async () => {
   }
 });
 
-carregar();
+// período que o dono escolheu em Configurações (só se for uma das opções da tela)
+FW_CONFIG.pronto.then(() => {
+  const padrao = String(FW_CONFIG.get().relatorio_periodo_dias);
+  if ([...periodo.options].some(o => o.value === padrao)) periodo.value = padrao;
+  carregar();
+});

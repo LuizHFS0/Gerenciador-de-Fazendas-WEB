@@ -1,4 +1,4 @@
-const API = "http://127.0.0.1:8000";
+const API = "";   // mesma origem: a API e o front saem do mesmo servidor
 const $ = id => document.getElementById(id);
 
 async function api(caminho) {
@@ -30,6 +30,7 @@ function tempoDeExistencia(iso) {
 // ---------- Fazenda e totais ----------
 async function carregarFazenda() {
   try {
+    await FW_CONFIG.pronto;
     const dados = await api("/detalhesFazenda");
 
     const t = dados.totais;
@@ -51,18 +52,22 @@ async function carregarFazenda() {
     // logo: imagem se carregar, senão a inicial do nome
     const logo = $("logoFazenda");
     logo.textContent = f.nome_fazenda.charAt(0).toUpperCase();
-    if (f.logo_fazenda) {
+    const pref = FW_CONFIG.get();
+    const origemLogo = pref.tem_logo ? `/api/configuracoes/logo?v=${pref.logo_versao}` : f.logo_fazenda;   // o enviado em Configurações vale mais
+    if (origemLogo) {
       const img = new Image();
       img.alt = "";
       img.onload = () => { logo.textContent = ""; logo.appendChild(img); };
-      img.src = f.logo_fazenda;
+      img.src = origemLogo;
     }
 
     const existencia = tempoDeExistencia(f.data_fundacao);
     const campos = [
       ["Nome", f.nome_fazenda],
       ["Proprietário", f.dono || "-"],
-      ["Tamanho", f.tamanho == null ? "-" : `${Number(f.tamanho).toLocaleString("pt-BR")} ha`],
+      ["Telefone", f.telefone || "-"],
+      ["E-mail", f.email || "-"],
+      ["Tamanho", FW_CONFIG.area(f.tamanho)],
       ["Endereço", f.endereco || "-"],
       ["Fundação", formatarData(f.data_fundacao) + (existencia ? ` (${existencia})` : "")]
     ];

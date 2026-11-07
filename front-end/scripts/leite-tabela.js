@@ -76,5 +76,8 @@ $("btnPdf").addEventListener("click", async () => {
   } catch (erro) {
     mostrarMensagem(erroTabela, erro.message);
   }
+  await FW_CONFIG.pronto;                                  // período padrão escolhido em Configurações
+  const padrao = String(FW_CONFIG.get().relatorio_periodo_dias);
+  if ([...$("periodo").options].some(o => o.value === padrao)) $("periodo").value = padrao;
   carregar();
 })();

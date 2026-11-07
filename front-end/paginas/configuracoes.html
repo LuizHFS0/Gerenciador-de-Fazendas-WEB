@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Configurações da fazenda</title>
+  <link rel="stylesheet" href="../estilo/style.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">Gerenciador de Fazendas</div>
+    <nav aria-label="Navegação principal" style="display:contents">
+      <ul class="menu">
+        <li><a href="../dashboard.html">Menu principal</a></li>
+        <li><a href="animais.html">Animais</a></li>
+        <li><a href="maquinas.html">Máquinas</a></li>
+        <li><a href="estoque.html">Estoque</a></li>
+        <li><a href="funcionarios.html">Funcionários</a></li>
+        <li><a href="fazenda.html">Fazenda</a></li>
+        <li><a href="utilitarios.html" class="ativo" aria-current="page">Utilitários</a></li>
+      </ul>
+    </nav>
+    <div class="usuario"><span class="avatar" aria-hidden="true">L</span><span>Luiz</span></div>
+  </header>
+
+  <main>
+    <h1>Configurações da fazenda</h1>
+    <p class="sub">Dados principais, unidades e preferências num só lugar. <a href="utilitarios.html">Voltar aos utilitários</a></p>
+
+    <form id="formConfig" novalidate>
+      <section class="secao" aria-labelledby="hDados">
+        <div class="secao-topo"><h2 id="hDados">Dados da fazenda</h2></div>
+        <div class="config-bloco">
+          <div class="config-logo">
+            <div class="logo" id="logoPrevia" aria-hidden="true"></div>
+            <div class="acoes">
+              <button type="button" id="btnLogo" class="secundario">Escolher logotipo</button>
+              <button type="button" id="btnRemoverLogo" class="secundario" hidden>Remover logotipo</button>
+            </div>
+            <input type="file" id="arquivoLogo" accept="image/png,image/jpeg,image/webp">
+            <p class="dica" style="text-align:center">PNG, JPG ou WebP</p>
+          </div>
+          <div class="config-campos">
+            <div class="grade">
+              <div class="campo"><label for="nome_fazenda">Nome da fazenda</label><input type="text" id="nome_fazenda" maxlength="120" required></div>
+              <div class="campo"><label for="dono">Proprietário</label><input type="text" id="dono" maxlength="100"></div>
+              <div class="campo"><label for="telefone">Telefone</label><input type="tel" id="telefone" maxlength="30"></div>
+              <div class="campo"><label for="email">E-mail</label><input type="email" id="email" maxlength="120"></div>
+              <div class="campo largo"><label for="endereco">Endereço</label><input type="text" id="endereco" maxlength="200"></div>
+              <div class="campo"><label for="tamanho">Tamanho da propriedade (ha)</label><input type="number" id="tamanho" min="0" step="0.01"></div>
+              <div class="campo"><label for="data_fundacao">Data de fundação</label><input type="date" id="data_fundacao"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="secao" aria-labelledby="hUnidades">
+        <div class="secao-topo"><h2 id="hUnidades">Unidades de medida</h2></div>
+        <div class="grade">
+          <div class="campo">
+            <label for="unidade_peso">Peso dos animais</label>
+            <select id="unidade_peso">
+              <option value="kg">Quilogramas (kg)</option>
+              <option value="arroba">Arrobas (@ = 15 kg)</option>
+              <option value="lb">Libras (lb)</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label for="unidade_area">Área da propriedade</label>
+            <select id="unidade_area">
+              <option value="ha">Hectares (ha)</option>
+              <option value="alqueire_mg">Alqueire mineiro (4,84 ha)</option>
+              <option value="alqueire_sp">Alqueire paulista (2,42 ha)</option>
+            </select>
+          </div>
+        </div>
+        <p class="dica">Muda só como os valores aparecem nas telas. Os cadastros continuam em kg e hectares.</p>
+      </section>
+
+      <section class="secao" aria-labelledby="hNotif">
+        <div class="secao-topo"><h2 id="hNotif">Notificações (tela de Alertas)</h2></div>
+        <div class="opcao"><input type="checkbox" id="notif_vacinas"><label for="notif_vacinas">Vacinas com próxima dose chegando</label></div>
+        <div class="opcao"><input type="checkbox" id="notif_manutencoes"><label for="notif_manutencoes">Manutenções de máquinas chegando</label></div>
+        <div class="opcao"><input type="checkbox" id="notif_estoque"><label for="notif_estoque">Itens de estoque abaixo do mínimo</label></div>
+        <div class="grade" style="margin-top:12px">
+          <div class="campo"><label for="alerta_dias">Avisar com quantos dias de antecedência</label><input type="number" id="alerta_dias" min="1" max="90" step="1"></div>
+        </div>
+      </section>
+
+      <section class="secao" aria-labelledby="hRel">
+        <div class="secao-topo"><h2 id="hRel">Relatórios</h2></div>
+        <div class="grade">
+          <div class="campo">
+            <label for="relatorio_periodo_dias">Período padrão do leite</label>
+            <select id="relatorio_periodo_dias">
+              <option value="1">Hoje</option>
+              <option value="7">Últimos 7 dias</option>
+              <option value="30">Últimos 30 dias</option>
+            </select>
+          </div>
+        </div>
+        <div class="opcao"><input type="checkbox" id="relatorio_logo"><label for="relatorio_logo">Mostrar o logotipo no PDF (o nome da fazenda sempre aparece)</label></div>
+      </section>
+
+      <div class="rodape-config">
+        <button type="submit" id="btnSalvar">Salvar alterações</button>
+        <span class="msg-ok" id="msgOk" role="status" hidden></span>
+        <span class="erro" id="msgErro" role="alert" hidden style="margin:0"></span>
+      </div>
+    </form>
+  </main>
+
+  <script src="../scripts/sessao.js"></script>
+  <script src="../scripts/configuracoes.js"></script>
+</body>
+</html>

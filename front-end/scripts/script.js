@@ -21,12 +21,12 @@ function formatarDataHora(texto) {
 
 async function carregarDashboard() {
   try {
-    const resposta = await fetch('http://127.0.0.1:8000/dashboard');
+    const resposta = await fetch('/dashboard');
     if (!resposta.ok) throw new Error(`Erro ${resposta.status}`);
     const dados = await resposta.json();
-
     definirTexto('#animais-ativos', dados.animais_ativos);
     definirTexto('#maquinas-em-operacao', dados.maquinas_operacao);
+    definirTexto('#estoque-baixo', dados.estoque_baixo);
     definirTexto('#funcionarios-ativos', dados.funcionarios_ativos);
     desenharTabela();
   } catch (erro) {
@@ -36,7 +36,7 @@ async function carregarDashboard() {
 
 async function desenharTabela() {
   try {
-    const resposta = await fetch('http://127.0.0.1:8000/obterLogsEstoque?limite=5');
+    const resposta = await fetch('/obterLogsEstoque?limite=5');
     const dados = await resposta.json();
     document.getElementById("corpoTabela").innerHTML = "";
 

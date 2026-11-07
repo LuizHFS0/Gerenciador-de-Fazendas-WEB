@@ -30,6 +30,7 @@ from logs import registrar_log
 from seguranca_http import instalar_seguranca
 from funcionarios_acesso import router as rotas_funcionarios
 from perfil import router as rotas_perfil
+from configuracoes import router as rotas_configuracoes
 
 COOKIE = "fw_sessao"
 DURACAO_SESSAO = 12 * 60 * 60
@@ -38,7 +39,7 @@ PAGINA_TROCA = "/front-end/trocar-senha.html"
 PAGINA_INICIAL = "/front-end/dashboard.html"
 NIVEIS_CRIAVEIS = ("gerente", "funcionario")
 METODOS_SEGUROS = ("GET", "HEAD", "OPTIONS")
-PUBLICAS = {("POST", "/api/auth/login"), ("POST", "/api/auth/logout"), ("GET", PAGINA_LOGIN)}
+PUBLICAS = {("POST", "/api/auth/login"), ("POST", "/api/auth/logout"), ("GET", PAGINA_LOGIN), ("GET", "/favicon.ico")}
 LIBERADAS_NA_TROCA = {"/api/auth/eu", "/api/auth/trocar-senha", PAGINA_TROCA}
 
 JANELA_FALHAS = 15 * 60
@@ -482,6 +483,7 @@ def instalar_autenticacao(app):
     app.include_router(usuarios)
     app.include_router(rotas_perfil)
     app.include_router(rotas_funcionarios)
+    app.include_router(rotas_configuracoes)
     instalar_seguranca(app)
     if configuracao.admin_habilitado():
         from admin_app import montar_admin

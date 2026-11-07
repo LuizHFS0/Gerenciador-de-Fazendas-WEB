@@ -53,14 +53,27 @@ def _gravar(usuario_id, tipo, dados):
     return versao
 
 
+def _nome_configurado():
+    conn = bf.conectar()
+    try:
+        linha = conn.execute("SELECT nome_fazenda FROM fazenda ORDER BY id LIMIT 1").fetchone()
+    finally:
+        conn.close()
+    return linha[0] if linha and linha[0] else None
+
+
 @router.get("")
 def obter_perfil():
     u = bf.usuario_atual()
     versao = _versao_da_foto(u["id"])
+    fazenda = ponte_admin.resumo_fazenda(u["fazenda_id"])
+    nome = _nome_configurado()                      # nome que o dono definiu em Configurações
+    if fazenda and nome:
+        fazenda = {**fazenda, "nome": nome}
     return {
         "nome": u["nome"], "usuario": u["usuario"],
         "perfil_rotulo": ROTULOS.get(u["nivel"], "Usuário"),
-        "fazenda": ponte_admin.resumo_fazenda(u["fazenda_id"]),
+        "fazenda": fazenda,
         "tem_foto": versao is not None, "foto_versao": versao,
         "sessao_expira_em": u["expira_em"],
         "nivel": u["nivel"], "pode_excluir": permissoes.pode_excluir(u["nivel"]),

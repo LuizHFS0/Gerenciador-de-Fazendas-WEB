@@ -4,8 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Gerenciador de Animais</title>
-  <link rel="stylesheet" href="../estilo/animais.css">
-  <link rel="stylesheet" href="../estilo/leite.css">
+  <link rel="stylesheet" href="../estilo/style.css">
   <style>
     /* Botão de destaque: Produção de leite */
     .btn-leite {
@@ -123,11 +122,7 @@
         </div>
         <div class="campo">
           <label for="lote">Lote</label>
-          <select id="lote">
-            <option value="A">A</option>
-            <option value="B">B</option>
-            <option value="C">C</option>
-          </select>
+          <select id="lote"></select>
         </div>
         <div class="campo">
           <label for="status">Status</label>
@@ -198,6 +193,7 @@
 </dialog>
 
   <script src="../scripts/sessao.js"></script>
+  <script src="../scripts/config-fazenda.js"></script>
   <script src="../scripts/animais.js"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-const API = "http://127.0.0.1:8000";
+const API = "";   // mesma origem: a API e o front saem do mesmo servidor
 const $ = id => document.getElementById(id);
 
 function formatarData(iso) {
@@ -86,3 +86,9 @@ async function carregarAlertas() {
 }
 
 carregarAlertas();
+
+// o texto acompanha a antecedência escolhida em Configurações
+FW_CONFIG.pronto.then(() => {
+  document.getElementById("subAlertas").textContent =
+    `Pendências vencidas ou com vencimento nos próximos ${FW_CONFIG.get().alerta_dias} dias.`;
+});

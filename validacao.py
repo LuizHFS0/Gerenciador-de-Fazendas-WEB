@@ -124,6 +124,12 @@ _MOVIMENTACAO = {"tipo": opcoes(("Entrada", "Saída"), True), "quantidade": nume
                  "observacoes": texto(500), "lote": texto(50)}
 _LOTE = {"nome": texto(50, True), "tamanho": numero(0, 1_000_000), "localizacao": texto(100), "descricao": texto(500)}
 
+_CONFIGURACOES = {"nome_fazenda": texto(120, True), "dono": texto(100), "endereco": texto(200), "telefone": texto(30),
+                  "email": texto(120), "tamanho": numero(0, 10_000_000), "data_fundacao": data(),
+                  "unidade_peso": texto(20), "unidade_area": texto(20),
+                  "notif_vacinas": booleano(), "notif_manutencoes": booleano(), "notif_estoque": booleano(),
+                  "alerta_dias": inteiro(1, 90), "relatorio_periodo_dias": inteiro(1, 365), "relatorio_logo": booleano()}
+
 # (métodos, padrão do caminho, esquema)
 ESQUEMAS = [
     ({"POST"}, r"^/cadastrarAnimal$", _ANIMAL),
@@ -149,6 +155,7 @@ ESQUEMAS = [
     ({"POST"}, r"^/api/usuarios$", {"nome": texto(100, True), "usuario": texto(40, True), "nivel": texto(20, True), "cargo": texto(60)}),
     ({"PUT"}, r"^/api/usuarios/\d+/ativo$", {"ativo": booleano()}),
     ({"PUT"}, r"^/api/usuarios/\d+/nivel$", {"nivel": texto(20, True)}),
+    ({"PUT"}, r"^/api/configuracoes$", _CONFIGURACOES),
 ]
 _COMPILADOS = [(m, re.compile(p), e) for m, p, e in ESQUEMAS]
 

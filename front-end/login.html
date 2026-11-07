@@ -59,9 +59,6 @@
   </main>
 
   <script>
-    // os scripts do sistema chamam a API em 127.0.0.1: o login precisa estar no mesmo endereço
-    if (location.hostname === "localhost") location.replace(location.href.replace("localhost", "127.0.0.1"));
-
     const $ = id => document.getElementById(id);
     const params = new URLSearchParams(location.search);
 

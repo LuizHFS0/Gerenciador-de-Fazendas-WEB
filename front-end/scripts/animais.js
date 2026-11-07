@@ -2,7 +2,8 @@ const animais = [];
 
 async function carregarAnimais() {
   try {
-    const resposta = await fetch("http://127.0.0.1:8000/consultarAnimais");
+    await FW_CONFIG.pronto;
+    const resposta = await fetch("/consultarAnimais");
     if (!resposta.ok) throw new Error(`Erro ${resposta.status}`);
 
     const dados = await resposta.json();
@@ -47,7 +48,7 @@ function formatarData(iso) {
 
 function formatarPeso(peso) {
   if (peso === null || peso === undefined || peso === "") return "-";
-  return `${Number(peso).toLocaleString("pt-BR")} kg`;
+  return FW_CONFIG.peso(peso);              // kg, arroba ou libra, conforme Configurações
 }
 
 function normalizar(texto) {
@@ -97,11 +98,32 @@ campoBusca.addEventListener("keydown", e => {
 });
 
 // ---------- Cadastrar ----------
-document.getElementById("btnCadastrar").addEventListener("click", () => {
+const campoLote = document.getElementById("lote");
+
+// A lista vem da API toda vez que o modal abre: o que foi criado, renomeado ou desativado
+// em Gestão de lotes já aparece aqui, sem depender de nada fixo na página.
+async function carregarLotes() {
+  campoLote.innerHTML = "";
+  try {
+    const resposta = await fetch("/consultarLotes");
+    if (!resposta.ok) throw new Error(`Erro ${resposta.status}`);
+    const { lotes } = await resposta.json();
+    lotes.forEach(l => campoLote.add(new Option(l.nome, l.nome)));
+    if (lotes.length === 0) {
+      mostrarErroCadastro("Nenhum lote cadastrado. Crie um em Utilitários → Gestão de lotes.");
+    }
+  } catch (erro) {
+    console.error("Falha ao carregar lotes:", erro);
+    mostrarErroCadastro("Não foi possível carregar a lista de lotes.");
+  }
+}
+
+document.getElementById("btnCadastrar").addEventListener("click", async () => {
   formCadastro.reset();
   erroCadastro.hidden = true;
   modalCadastro.showModal();
   document.getElementById("nome").focus();
+  await carregarLotes();
 });
 
 document.getElementById("cancelarCadastro").addEventListener("click", () => modalCadastro.close());
@@ -115,6 +137,10 @@ formCadastro.addEventListener("submit", async e => {
 
   if (!nome || !brinco) {
     mostrarErroCadastro("Preencha o nome e o brinco.");
+    return;
+  }
+  if (!campoLote.value) {
+    mostrarErroCadastro("Escolha um lote. Se não houver nenhum, crie em Utilitários → Gestão de lotes.");
     return;
   }
 
@@ -133,7 +159,7 @@ formCadastro.addEventListener("submit", async e => {
   };
 
   try {
-    const resposta = await fetch("http://127.0.0.1:8000/cadastrarAnimal", {
+    const resposta = await fetch("/cadastrarAnimal", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(novoAnimal)
@@ -187,7 +213,7 @@ document.getElementById("btnExcluir").addEventListener("click", () => {
 
 document.getElementById("confirmarExcluir").addEventListener("click", async () => {
   try {
-    const resposta = await fetch(`http://127.0.0.1:8000/excluirAnimal/${selecionadoId}`, {
+    const resposta = await fetch(`/excluirAnimal/${selecionadoId}`, {
       method: "DELETE"
     });
 

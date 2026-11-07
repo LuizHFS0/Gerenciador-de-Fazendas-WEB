@@ -1,0 +1,3 @@
+# Para rodar os testes:  pip install -r requirements-dev.txt   e depois   pytest -r requirements.txt
+pytest>=8
+httpx>=0.27

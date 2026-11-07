@@ -1,4 +1,4 @@
-const API = "http://127.0.0.1:8000";
+const API = "";   // mesma origem: a API e o front saem do mesmo servidor
 const id = new URLSearchParams(location.search).get("id");
 if (!id) location.href = "animais.html";
 
@@ -24,7 +24,7 @@ function formatarData(iso) {
 
 function formatarPeso(peso) {
   if (peso === null || peso === undefined || peso === "") return "-";
-  return `${Number(peso).toLocaleString("pt-BR")} kg`;
+  return FW_CONFIG.peso(peso);              // kg, arroba ou libra, conforme Configurações
 }
 
 function preencherTabela(corpo, linhas, colunas) {
@@ -46,6 +46,7 @@ function preencherTabela(corpo, linhas, colunas) {
 
 // ---------- Carregar dados ----------
 async function carregarAnimal() {
+  await FW_CONFIG.pronto;
   try {
     animal = await api(`/consultarAnimal/${id}`);
   } catch (erro) {

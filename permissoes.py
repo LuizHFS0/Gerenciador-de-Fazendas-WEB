@@ -30,6 +30,10 @@ POLITICA = [
     # só o Dono
     _regra("GET", r"^/backup$", "dono"),
     _regra("GET", r"^/(detalhesFazenda|ultimosLogs)$", "dono"),
+    _regra("GET PUT", r"^/api/configuracoes$", "dono"),
+    _regra("PUT DELETE", r"^/api/configuracoes/logo$", "dono"),
+    # o que as telas precisam ler (unidades, alertas, logotipo): qualquer usuário logado
+    _regra("GET", r"^/api/configuracoes/(preferencias|logo)$", "funcionario"),
     _regra("GET POST PUT DELETE", r"^/api/usuarios(/.*)?$", "dono"),
     # funcionários (CPF, telefone...) e acesso deles ao sistema: Gerente ou Dono
     _regra("GET POST PUT DELETE",
@@ -39,7 +43,7 @@ POLITICA = [
     _regra("DELETE", r"^/(excluirAnimal|excluirMaquina|excluirItem|excluirLote)/\d+$", "gerente"),
     _regra("PUT", r"^/editarLote/\d+$", "gerente"),
     # dia a dia: qualquer usuário logado
-    _regra("GET", r"^/(dashboard|movimentacoesDashboard|consultarAnimais|consultarAnimal/\d+|pesagens/\d+|vacinas/\d+"
+    _regra("GET", r"^/(dashboard|movimentacoesDashboard|obterLogsEstoque|consultarAnimais|consultarAnimal/\d+|pesagens/\d+|vacinas/\d+"
                   r"|consultarLotes|consultarMaquinas|consultarMaquina/\d+|manutencoes/\d+|consultarEstoque"
                   r"|consultarItem/\d+|movimentacoes/\d+|alertas|gerenciarLotes|dashboardLeite|vacasDoLote/[^/]+"
                   r"|consultarProducaoLeite|relatorioLeite)$", "funcionario"),
@@ -49,7 +53,7 @@ POLITICA = [
 ]
 
 # páginas restritas (pelo nome do arquivo)
-PAGINAS = {"fazenda.html": "dono", "usuarios.html": "dono", "funcionarios.html": "gerente", "funcionario.html": "gerente"}
+PAGINAS = {"fazenda.html": "dono", "configuracoes.html": "dono", "usuarios.html": "dono", "funcionarios.html": "gerente", "funcionario.html": "gerente"}
 
 
 def permitido(nivel, metodo, caminho):

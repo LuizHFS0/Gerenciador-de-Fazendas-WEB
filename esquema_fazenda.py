@@ -47,6 +47,11 @@ TABELAS = [
         data_fundacao TEXT,
         dono TEXT,
         logo_fazenda TEXT)""",
+    """CREATE TABLE IF NOT EXISTS fazenda_logo(
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        tipo TEXT NOT NULL,
+        dados BLOB NOT NULL,
+        atualizada_em INTEGER NOT NULL)""",
     """CREATE TABLE IF NOT EXISTS funcionarios(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT NOT NULL,
@@ -208,11 +213,22 @@ COLUNAS_NOVAS = [
     ("estoque", "ativo", "INTEGER DEFAULT 1"),
     ("maquinas", "ativo", "INTEGER DEFAULT 1"),
     ("movimentacoes_estoque", "lote_id", "INTEGER REFERENCES lote(id)"),
+    # configurações da fazenda (tela Utilitários > Configurações)
+    ("fazenda", "telefone", "TEXT"),
+    ("fazenda", "email", "TEXT"),
+    ("fazenda", "unidade_peso", "TEXT NOT NULL DEFAULT 'kg'"),
+    ("fazenda", "unidade_area", "TEXT NOT NULL DEFAULT 'ha'"),
+    ("fazenda", "notif_vacinas", "INTEGER NOT NULL DEFAULT 1"),
+    ("fazenda", "notif_manutencoes", "INTEGER NOT NULL DEFAULT 1"),
+    ("fazenda", "notif_estoque", "INTEGER NOT NULL DEFAULT 1"),
+    ("fazenda", "alerta_dias", "INTEGER NOT NULL DEFAULT 15"),
+    ("fazenda", "relatorio_periodo_dias", "INTEGER NOT NULL DEFAULT 30"),
+    ("fazenda", "relatorio_logo", "INTEGER NOT NULL DEFAULT 1"),
 ]
 
 
-# 1 = etapa 1 (base) | 2 = fotos e funcionarios.usuario_id | 3 = auditoria e controle de versão
-SCHEMA_VERSAO = 3
+# 1 = etapa 1 (base) | 2 = fotos e funcionarios.usuario_id | 3 = auditoria e controle de versão | 4 = configurações da fazenda
+SCHEMA_VERSAO = 4
 
 
 def garantir_esquema(conn):

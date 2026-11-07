@@ -1,0 +1,14 @@
+.config-bloco { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+.config-logo { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 140px; }
+.config-logo .logo { width: 120px; height: 120px; }
+.config-logo .logo img { object-fit: contain; background: #fff; }
+.config-logo .acoes { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.config-logo button { width: 100%; margin-top: 0; }
+.config-campos { flex: 1; min-width: 280px; }
+.dica { color: var(--suave); font-size: .85rem; margin-top: 6px; }
+.opcao { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+.opcao input { width: auto; }
+.opcao label { font-weight: 400; }
+.rodape-config { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 40px; }
+.msg-ok { color: var(--campo); font-weight: 700; }
+input[type="file"] { display: none; }

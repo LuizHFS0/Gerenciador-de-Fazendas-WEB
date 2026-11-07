@@ -1,7 +1,7 @@
 import sqlite3
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from starlette.background import BackgroundTask
 import os
 import tempfile
@@ -13,15 +13,24 @@ from datetime import date, timedelta
 from xml.sax.saxutils import escape as _escapar
 
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 from pathlib import Path
-from banco_fazenda import conectar, fazenda_atual
+from banco_fazenda import conectar
+import configuracoes
 
 from logs import registrar_log, nome_de
 
 app = FastAPI()
 
 FRONTEND_DIR = Path(__file__).parent / "front-end"
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    """O navegador pede /favicon.ico sozinho (inclusive na tela de login, por isso a rota é pública)."""
+    for caminho in (FRONTEND_DIR / "favicon.png", Path(__file__).parent / "favicon.png"):
+        if caminho.is_file():
+            return FileResponse(caminho, media_type="image/png", headers={"Cache-Control": "public, max-age=86400"})
+    return Response(status_code=204)                       # sem ícone: resposta vazia, sem 404 no log
 
 
 @app.get("/")
@@ -67,6 +76,12 @@ def executar(sql, params=()):
         conn.close()
 
 
+def _exigir_ativo(tabela, registro_id, rotulo):
+    """404 se o animal/máquina não existe (ou foi excluído). "tabela" é sempre um texto fixo do código."""
+    if not consultar(f"SELECT 1 FROM {tabela} WHERE id = ? AND ativo = 1", (registro_id,)):
+        raise HTTPException(status_code=404, detail=f"{rotulo} não encontrado.")
+
+
 def contar(tabela, onde=""):
     # "tabela" e "onde" são sempre textos fixos do código, nunca vêm da requisição
     return consultar(f"SELECT COUNT(*) AS n FROM {tabela} {onde}")[0]["n"]
@@ -93,8 +108,8 @@ def obter_movimentacoes_dashboard():
 
 @app.get("/obterLogsEstoque")
 def obterLogsEstoque(limite: int = 5):
+    limite = max(1, min(limite, 100))
     return {
-        "Fazenda atual: ": f"{fazenda_atual}",
         "logs": consultar(
             """
             SELECT
@@ -145,7 +160,7 @@ def cadastrar_animal(animal: dict):
         cursor = conn.cursor()
 
         # o combobox manda o NOME do lote (A, B, C); o banco guarda o lote_id
-        cursor.execute("SELECT id FROM lote WHERE nome = ?", (animal.get("lote"),))
+        cursor.execute("SELECT id FROM lote WHERE nome = ? AND ativo = 1", (animal.get("lote"),))
         linha_lote = cursor.fetchone()
         if linha_lote is None:
             raise HTTPException(status_code=400, detail="Lote não encontrado.")
@@ -191,7 +206,7 @@ def excluir_animal(animal_id: int):
 
 @app.put("/alterarLote/{animal_id}")
 def alterar_lote(animal_id: int, dados: dict):
-    lote = consultar("SELECT id FROM lote WHERE nome = ?", (dados.get("lote"),))
+    lote = consultar("SELECT id FROM lote WHERE nome = ? AND ativo = 1", (dados.get("lote"),))
     if not lote:
         raise HTTPException(status_code=400, detail="Lote não encontrado.")
     if executar("UPDATE animais SET lote_id = ? WHERE id = ? AND ativo = 1",
@@ -225,6 +240,7 @@ def listar_pesagens(animal_id: int):
 
 @app.post("/pesagens/{animal_id}", status_code=201)
 def adicionar_pesagem(animal_id: int, d: dict):
+    _exigir_ativo("animais", animal_id, "Animal")
     executar("""INSERT INTO pesagens (animal_id, data_pesagem, peso, observacoes)
                 VALUES (?, ?, ?, ?)""",
              (animal_id, d["data_pesagem"], d["peso"], d.get("observacoes", "")))
@@ -248,6 +264,7 @@ def listar_vacinas(animal_id: int):
 
 @app.post("/vacinas/{animal_id}", status_code=201)
 def adicionar_vacina(animal_id: int, d: dict):
+    _exigir_ativo("animais", animal_id, "Animal")
     executar("""INSERT INTO vacinas (animal_id, vacina, data_aplicacao, proxima_dose,
                                      responsavel, observacoes)
                 VALUES (?, ?, ?, ?, ?, ?)""",
@@ -261,7 +278,7 @@ def adicionar_vacina(animal_id: int, d: dict):
 
 @app.get("/consultarLotes")
 def consultar_lotes():
-    return {"lotes": consultar("SELECT id, nome FROM lote WHERE ativo = 1")}
+    return {"lotes": consultar("SELECT id, nome FROM lote WHERE ativo = 1 ORDER BY nome")}
 
 
 # ---------- Máquinas ----------
@@ -326,6 +343,7 @@ def listar_manutencoes(maquina_id: int):
 
 @app.post("/manutencoes/{maquina_id}", status_code=201)
 def registrar_manutencao(maquina_id: int, d: dict):
+    _exigir_ativo("maquinas", maquina_id, "Máquina")
     executar("""INSERT INTO manutencoes (maquina_id, tipo_manutencao, data_manutencao,
                                          proxima_manutencao, descricao, responsavel)
                 VALUES (?, ?, ?, ?, ?, ?)""",
@@ -405,20 +423,28 @@ def registrar_movimentacao(item_id: int, d: dict):
         item = cursor.fetchone()
         if item is None:
             raise HTTPException(status_code=404, detail="Item não encontrado.")
-        nome, atual = item[0], item[1] or 0
-
-        if tipo == "Saída" and quantidade > atual:
-            raise HTTPException(status_code=400, detail=f"Estoque insuficiente (disponível: {atual:g}).")
+        nome = item[0]
 
         lote_id = None
         if d.get("lote"):
-            cursor.execute("SELECT id FROM lote WHERE nome = ?", (d["lote"],))
+            cursor.execute("SELECT id FROM lote WHERE nome = ? AND ativo = 1", (d["lote"],))
             linha = cursor.fetchone()
             if linha is None:
                 raise HTTPException(status_code=400, detail="Lote não encontrado.")
             lote_id = linha[0]
 
-        nova = round(atual + quantidade if tipo == "Entrada" else atual - quantidade, 3)
+        # A conta é feita DENTRO do UPDATE (um único comando atômico no SQLite): dois pedidos simultâneos
+        # nunca leem o mesmo saldo, e a saída nunca deixa o estoque negativo.
+        delta = quantidade if tipo == "Entrada" else -quantidade
+        cursor.execute("""UPDATE estoque SET quantidade = ROUND(COALESCE(quantidade, 0) + ?, 3)
+                          WHERE id = ? AND ativo = 1 AND COALESCE(quantidade, 0) + ? >= 0""",
+                       (delta, item_id, delta))
+        if cursor.rowcount == 0:
+            cursor.execute("SELECT quantidade FROM estoque WHERE id = ? AND ativo = 1", (item_id,))
+            atual = cursor.fetchone()
+            if atual is None:
+                raise HTTPException(status_code=404, detail="Item não encontrado.")
+            raise HTTPException(status_code=400, detail=f"Estoque insuficiente (disponível: {(atual[0] or 0):g}).")
 
         cursor.execute("""INSERT INTO movimentacoes_estoque
                           (item_id, tipo, quantidade, data_movimentacao, responsavel, motivo,
@@ -426,7 +452,6 @@ def registrar_movimentacao(item_id: int, d: dict):
                           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
                        (item_id, tipo, quantidade, d["data_movimentacao"], d.get("responsavel", ""),
                         d.get("motivo", ""), d.get("observacoes", ""), lote_id))
-        cursor.execute("UPDATE estoque SET quantidade = ? WHERE id = ?", (nova, item_id))
         conn.commit()
     finally:
         conn.close()
@@ -498,10 +523,12 @@ def movimentacoes_funcionario(funcionario_id: int):
 # ---------- Utilitários: alertas ----------
 @app.get("/alertas")
 def alertas():
-    limite = "date('now', 'localtime', '+15 day')"
+    cfg = configuracoes.ler()
+    limite = f"date('now', 'localtime', '+{int(cfg['alerta_dias'])} day')"      # antecedência definida em Configurações
+    vazio = lambda ligado, itens: itens() if ligado else []
     return {
         # só vale a aplicação mais recente de cada vacina por animal
-        "vacinas": consultar(f"""
+        "vacinas": vazio(cfg["notif_vacinas"], lambda: consultar(f"""
             SELECT v.vacina, v.proxima_dose, a.nome AS animal, a.id AS animal_id
             FROM vacinas v JOIN animais a ON a.id = v.animal_id
             WHERE a.ativo = 1 AND v.proxima_dose IS NOT NULL AND v.proxima_dose <= {limite}
@@ -509,20 +536,20 @@ def alertas():
                               WHERE v2.animal_id = v.animal_id
                                 AND LOWER(TRIM(v2.vacina)) = LOWER(TRIM(v.vacina))
                                 AND v2.data_aplicacao > v.data_aplicacao)
-            ORDER BY v.proxima_dose"""),
+            ORDER BY v.proxima_dose""")),
         # só vale a manutenção mais recente de cada máquina
-        "manutencoes": consultar(f"""
+        "manutencoes": vazio(cfg["notif_manutencoes"], lambda: consultar(f"""
             SELECT q.nome AS maquina, q.id AS maquina_id, m.data_manutencao, m.proxima_manutencao
             FROM manutencoes m JOIN maquinas q ON q.id = m.maquina_id
             WHERE q.ativo = 1 AND m.proxima_manutencao IS NOT NULL AND m.proxima_manutencao <= {limite}
               AND NOT EXISTS (SELECT 1 FROM manutencoes m2
                               WHERE m2.maquina_id = m.maquina_id
                                 AND m2.data_manutencao > m.data_manutencao)
-            ORDER BY m.proxima_manutencao"""),
-        "estoque": consultar("""
+            ORDER BY m.proxima_manutencao""")),
+        "estoque": vazio(cfg["notif_estoque"], lambda: consultar("""
             SELECT id, nome, quantidade, estoque_minimo, unidade, localizacao
             FROM estoque WHERE ativo = 1 AND quantidade <= estoque_minimo
-            ORDER BY nome"""),
+            ORDER BY nome""")),
     }
 
 
@@ -540,10 +567,13 @@ def cadastrar_lote(l: dict):
     nome = (l.get("nome") or "").strip()
     if not nome:
         raise HTTPException(status_code=400, detail="Informe o nome do lote.")
+    dados = (l.get("tamanho"), l.get("localizacao", ""), l.get("descricao", ""))
     try:
-        executar("""INSERT INTO lote (nome, tamanho, localizacao, descricao, ativo)
-                    VALUES (?, ?, ?, ?, 1)""",
-                 (nome, l.get("tamanho"), l.get("localizacao", ""), l.get("descricao", "")))
+        # "Excluir" só desativa o lote, e o nome é único: recriar um lote desativado reativa o mesmo registro
+        if executar("""UPDATE lote SET tamanho = ?, localizacao = ?, descricao = ?, ativo = 1
+                       WHERE nome = ? AND ativo = 0""", (*dados, nome)) == 0:
+            executar("""INSERT INTO lote (nome, tamanho, localizacao, descricao, ativo)
+                        VALUES (?, ?, ?, ?, 1)""", (nome, *dados))
     except sqlite3.IntegrityError:
         raise HTTPException(status_code=409, detail="Já existe um lote com esse nome.")
 
@@ -905,9 +935,25 @@ def relatorio_leite(lote: str = "", dias: int = 30, ordem: str = "maior"):
         t.setStyle(TableStyle(estilo))
         return t
 
-    elementos = [
+    cfg = configuracoes.ler()
+    nome_fazenda = cfg["nome_fazenda"] or "Gerenciador de Fazendas"
+    elementos = []
+    logo = configuracoes.logo_bytes() if cfg["relatorio_logo"] else None
+    if logo:
+        try:
+            from io import BytesIO
+            from reportlab.lib.utils import ImageReader
+            from reportlab.platypus import Image as ImagemPdf
+            largura, altura = ImageReader(BytesIO(logo[1])).getSize()
+            fator = min(5 * cm / largura, 1.8 * cm / altura)
+            imagem = ImagemPdf(BytesIO(logo[1]), width=largura * fator, height=altura * fator)
+            imagem.hAlign = "LEFT"
+            elementos += [imagem, Spacer(1, 6)]
+        except Exception:
+            pass                                          # logotipo ilegível nunca impede o relatório
+    elementos += [
         Paragraph("Relatório de produção de leite", s_titulo),
-        Paragraph(f"Período: {periodo}<br/>Abrangência: {escopo}<br/>"
+        Paragraph(f"Fazenda: {_escapar(nome_fazenda)}<br/>Período: {periodo}<br/>Abrangência: {escopo}<br/>"
                   f"Gerado em {datetime.now():%d/%m/%Y} às {datetime.now():%H:%M}", s_sub),
         Paragraph("Resumo", s_h2),
         tabela([["Indicador", "Valor"],
@@ -947,7 +993,7 @@ def relatorio_leite(lote: str = "", dias: int = 30, ordem: str = "maior"):
         canvas.saveState()
         canvas.setFont("Helvetica", 8)
         canvas.setFillColor(suave)
-        canvas.drawString(2 * cm, 1.2 * cm, "Gerenciador de Fazendas")
+        canvas.drawString(2 * cm, 1.2 * cm, nome_fazenda[:80])
         canvas.drawRightString(A4[0] - 2 * cm, 1.2 * cm, f"Página {doc.page}")
         canvas.restoreState()
 
