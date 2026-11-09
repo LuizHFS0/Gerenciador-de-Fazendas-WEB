@@ -150,6 +150,18 @@ sudo -u fazendaweb /opt/fazendaweb/venv/bin/python backups.py backup
 
 Cada execução cria uma pasta datada dentro de \`FAZENDAWEB_BACKUPS\`, com os bancos e um \`manifest.json\` contendo tamanho, SHA-256 e resultado de integridade.
 
+Para automatizar um backup diário às 03:15, instale o serviço e o timer incluídos no repositório:
+
+```bash
+sudo cp /opt/fazendaweb/app/deploy/fazendaweb-backup.service /etc/systemd/system/
+sudo cp /opt/fazendaweb/app/deploy/fazendaweb-backup.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now fazendaweb-backup.timer
+systemctl list-timers fazendaweb-backup.timer
+```
+
+Consulte a execução mais recente com `sudo journalctl -u fazendaweb-backup.service`. O timer depende de o projeto, o ambiente virtual e o arquivo de ambiente permanecerem nos locais indicados.
+
 **Importante:** backup não é considerado confiável até que a restauração seja testada. Faça o teste em uma pasta isolada, nunca sobrescrevendo os bancos de produção. Mantenha cópias em outro disco ou em outro local físico; um backup no mesmo servidor não protege contra falha do próprio equipamento.
 
 ## 9. Verificação antes de publicar
