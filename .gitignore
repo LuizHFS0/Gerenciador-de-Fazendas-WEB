@@ -10,10 +10,7 @@ __pycache__/
 *.sqlite
 *.sqlite3
 *.log
-/dados/seguranca.log*
-/dados/admin.db*
-/dados/superadmin.db*
-/dados/fazendas/*.db*
+/dados/
 /backups/
 .pytest_cache/
 .coverage
