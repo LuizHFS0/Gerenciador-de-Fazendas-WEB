@@ -407,7 +407,7 @@
       document.querySelectorAll(`a[href="${nome}"], a[href$="/${nome}"]`).forEach(a => { (a.closest("li") || a).hidden = true; });
     });
     if (perfil.pode_excluir === false) {
-      document.querySelectorAll('[id^="btnExcluir"], [data-acao="excluir"]').forEach(b => { b.hidden = true; });
+      document.querySelectorAll('[id^="btnExcluir"], [data-acao="excluir"], [data-acao="baixa"]').forEach(b => { b.hidden = true; });
       document.querySelectorAll(".botoes button").forEach(b => { if (b.textContent.trim().toLowerCase() === "excluir") b.hidden = true; });
     }
   }

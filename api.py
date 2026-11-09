@@ -16,6 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 from banco_fazenda import conectar
 import configuracoes
+from validacao import MOTIVOS_BAIXA
 
 from logs import registrar_log, nome_de
 
@@ -202,6 +203,34 @@ def excluir_animal(animal_id: int):
 
     registrar_log("Exclusão", "animais", f'Animal "{nome}" excluído')
     return {"message": "Animal excluído com sucesso!"}
+
+
+# Baixa: o animal sai da fazenda por venda, abate ou morte. Continua guardado (ativo = 0) com motivo, data e observações.
+@app.post("/baixaAnimal/{animal_id}")
+def baixa_animal(animal_id: int, d: dict):
+    motivo = d.get("motivo")
+    if motivo not in MOTIVOS_BAIXA:
+        raise HTTPException(status_code=400, detail="Escolha o motivo da baixa: " + ", ".join(MOTIVOS_BAIXA).lower() + ".")
+    try:
+        dia = date.fromisoformat(str(d.get("data")))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Informe a data da baixa.")
+    if dia > date.today():
+        raise HTTPException(status_code=400, detail="A data da baixa não pode ser no futuro.")
+
+    animal = consultar("SELECT nome, data_nascimento FROM animais WHERE id = ? AND ativo = 1", (animal_id,))
+    if not animal:
+        raise HTTPException(status_code=404, detail="Animal não encontrado.")
+    nascimento = animal[0]["data_nascimento"]
+    if nascimento and str(dia) < nascimento:
+        raise HTTPException(status_code=400, detail="A data da baixa não pode ser anterior ao nascimento do animal.")
+
+    obs = (d.get("observacoes") or "").strip() or None
+    if executar("""UPDATE animais SET ativo = 0, baixa_motivo = ?, baixa_data = ?, baixa_observacoes = ?
+                   WHERE id = ? AND ativo = 1""", (motivo, str(dia), obs, animal_id)) == 0:
+        raise HTTPException(status_code=404, detail="Animal não encontrado.")      # outra pessoa deu baixa nesse meio tempo
+    registrar_log("Baixa", "animais", f'Baixa do animal "{animal[0]["nome"]}": {motivo.lower()} em {dia:%d/%m/%Y}')
+    return {"message": f"Baixa registrada ({motivo.lower()})."}
 
 
 @app.put("/alterarLote/{animal_id}")

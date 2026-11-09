@@ -193,12 +193,18 @@ document.getElementById("btnInformacoes").addEventListener("click", () => {
   window.location.href = `animal.html?id=${animal.id}`;
 });
 
-// ---------- Excluir ----------
-const modalExcluir = document.getElementById("modalExcluir");
-const textoExcluir = document.getElementById("textoExcluir");
-const erroExcluir = document.getElementById("erroExcluir");
+// ---------- Baixa (venda, abate ou morte) ----------
+const modalBaixa = document.getElementById("modalBaixa");
+const formBaixa = document.getElementById("formBaixa");
+const erroBaixa = document.getElementById("erroBaixa");
 
-document.getElementById("btnExcluir").addEventListener("click", () => {
+function hojeISO() {
+  const d = new Date();
+  const pad = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+document.getElementById("btnBaixa").addEventListener("click", () => {
   const animal = animais.find(a => a.id === selecionadoId);
 
   if (!animal) {
@@ -206,30 +212,47 @@ document.getElementById("btnExcluir").addEventListener("click", () => {
     return;
   }
 
-  textoExcluir.textContent = `Deseja excluir "${animal.nome}" (brinco ${animal.brinco})?`;
-  erroExcluir.hidden = true;
-  modalExcluir.showModal();
+  formBaixa.reset();
+  document.getElementById("textoBaixa").textContent = `${animal.nome} (brinco ${animal.brinco})`;
+  document.getElementById("dataBaixa").value = hojeISO();
+  document.getElementById("dataBaixa").max = hojeISO();
+  erroBaixa.hidden = true;
+  modalBaixa.showModal();
 });
 
-document.getElementById("confirmarExcluir").addEventListener("click", async () => {
-  try {
-    const resposta = await fetch(`/excluirAnimal/${selecionadoId}`, {
-      method: "DELETE"
-    });
+formBaixa.addEventListener("submit", async e => {
+  e.preventDefault();
+  const motivo = formBaixa.querySelector('input[name="motivoBaixa"]:checked');
+  const data = document.getElementById("dataBaixa").value;
+  if (!motivo) return mostrarErroBaixa("Escolha o motivo da baixa: venda, abate ou morte.");
+  if (!data) return mostrarErroBaixa("Informe a data da baixa.");
 
+  const botao = document.getElementById("confirmarBaixa");
+  botao.disabled = true;
+  try {
+    const resposta = await fetch(`/baixaAnimal/${selecionadoId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ motivo: motivo.value, data, observacoes: document.getElementById("obsBaixa").value.trim() })
+    });
     if (!resposta.ok) {
       const erro = await resposta.json().catch(() => ({}));
-      throw new Error(erro.detail || "Erro ao excluir o animal.");
+      throw new Error(erro.detail || "Erro ao registrar a baixa.");
     }
-
-    modalExcluir.close();
-    selecionadoId = null;        
-    await carregarAnimais();   
+    modalBaixa.close();
+    selecionadoId = null;
+    await carregarAnimais();
   } catch (erro) {
-    erroExcluir.textContent = erro.message;
-    erroExcluir.hidden = false;
+    mostrarErroBaixa(erro.message);
+  } finally {
+    botao.disabled = false;
   }
 });
+
+function mostrarErroBaixa(texto) {
+  erroBaixa.textContent = texto;
+  erroBaixa.hidden = false;
+}
 
 // ---------- Fechar modais ----------
 document.querySelectorAll("[data-fechar]").forEach(botao => {

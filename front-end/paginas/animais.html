@@ -60,7 +60,7 @@
         <button type="button" id="btnPesquisar">Pesquisar</button>
         <button type="button" id="btnCadastrar">Cadastrar</button>
         <button type="button" id="btnInformacoes">Informações</button>
-        <button type="button" id="btnExcluir">Excluir</button>
+        <button type="button" id="btnBaixa" data-acao="baixa">Baixa</button>
       </div>
       <a class="btn-leite" href="leite.html">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -181,16 +181,31 @@
       <button type="button" data-fechar="modalErro">Entendi</button>
     </div>
   </dialog>
-  <!-- Modal: Confirmar exclusão -->
-<dialog id="modalExcluir">
-  <h2>Excluir animal</h2>
-  <p id="textoExcluir"></p>
-  <p class="erro" id="erroExcluir" role="alert" hidden></p>
-  <div class="rodape-modal">
-    <button type="button" class="secundario" data-fechar="modalExcluir">Cancelar</button>
-    <button type="button" class="perigo" id="confirmarExcluir">Excluir</button>
-  </div>
-</dialog>
+  <!-- Modal: Baixa do animal -->
+  <dialog id="modalBaixa">
+    <form id="formBaixa" novalidate>
+      <h2>Baixa do animal</h2>
+      <p id="textoBaixa"></p>
+      <fieldset class="campo largo" style="border:0;padding:0;margin-top:12px">
+        <legend style="font-weight:700;font-size:.9rem;margin-bottom:6px">Motivo</legend>
+        <div class="opcoes-baixa">
+          <label><input type="radio" name="motivoBaixa" value="Venda"> Venda</label>
+          <label><input type="radio" name="motivoBaixa" value="Abate"> Abate</label>
+          <label><input type="radio" name="motivoBaixa" value="Morte"> Morte</label>
+        </div>
+      </fieldset>
+      <div class="grade" style="margin-top:12px">
+        <div class="campo"><label for="dataBaixa">Data da baixa</label><input type="date" id="dataBaixa" required></div>
+        <div class="campo largo"><label for="obsBaixa">Observações</label><textarea id="obsBaixa" rows="3" maxlength="500"></textarea></div>
+      </div>
+      <p class="dica">O animal sai das listas, mas o registro da baixa fica guardado.</p>
+      <p class="erro" id="erroBaixa" role="alert" hidden></p>
+      <div class="rodape-modal">
+        <button type="button" class="secundario" data-fechar="modalBaixa">Cancelar</button>
+        <button type="submit" class="perigo" id="confirmarBaixa">Registrar baixa</button>
+      </div>
+    </form>
+  </dialog>
 
   <script src="../scripts/sessao.js"></script>
   <script src="../scripts/config-fazenda.js"></script>

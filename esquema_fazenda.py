@@ -213,6 +213,10 @@ COLUNAS_NOVAS = [
     ("estoque", "ativo", "INTEGER DEFAULT 1"),
     ("maquinas", "ativo", "INTEGER DEFAULT 1"),
     ("movimentacoes_estoque", "lote_id", "INTEGER REFERENCES lote(id)"),
+    # baixa de animal (venda, abate ou morte)
+    ("animais", "baixa_motivo", "TEXT"),
+    ("animais", "baixa_data", "TEXT"),
+    ("animais", "baixa_observacoes", "TEXT"),
     # configurações da fazenda (tela Utilitários > Configurações)
     ("fazenda", "telefone", "TEXT"),
     ("fazenda", "email", "TEXT"),
@@ -227,8 +231,8 @@ COLUNAS_NOVAS = [
 ]
 
 
-# 1 = etapa 1 (base) | 2 = fotos e funcionarios.usuario_id | 3 = auditoria e controle de versão | 4 = configurações da fazenda
-SCHEMA_VERSAO = 4
+# 1 = etapa 1 (base) | 2 = fotos e funcionarios.usuario_id | 3 = auditoria e controle de versão | 4 = configurações da fazenda | 5 = baixa de animais
+SCHEMA_VERSAO = 5
 
 
 def garantir_esquema(conn):

@@ -9,6 +9,7 @@ from datetime import date
 
 STATUS_ANIMAL = ("Ativo", "Tratamento", "Seca", "Prenha", "Abate")
 STATUS_MAQUINA = ("Ativo", "Manutenção", "Encostado")
+MOTIVOS_BAIXA = ("Venda", "Abate", "Morte")
 
 
 class ErroValidacao(Exception):
@@ -156,6 +157,7 @@ ESQUEMAS = [
     ({"PUT"}, r"^/api/usuarios/\d+/ativo$", {"ativo": booleano()}),
     ({"PUT"}, r"^/api/usuarios/\d+/nivel$", {"nivel": texto(20, True)}),
     ({"PUT"}, r"^/api/configuracoes$", _CONFIGURACOES),
+    ({"POST"}, r"^/baixaAnimal/\d+$", {"motivo": opcoes(MOTIVOS_BAIXA, True), "data": data(True), "observacoes": texto(500)}),
 ]
 _COMPILADOS = [(m, re.compile(p), e) for m, p, e in ESQUEMAS]
 

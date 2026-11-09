@@ -650,3 +650,230 @@ a.cartao:hover {
   .botoes { width: 100%; }
   .botoes button { flex: 1; }
 }
+/* ==========================================================================
+   CONFIGURAÇÕES
+   ========================================================================== */
+
+.config-bloco {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.config-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 140px;
+}
+
+.config-logo .logo {
+  width: 120px;
+  height: 120px;
+}
+
+.config-logo .logo img {
+  object-fit: contain;
+  background: #fff;
+}
+
+.config-logo .acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.config-logo button {
+  width: 100%;
+  margin-top: 0;
+}
+
+.config-campos {
+  flex: 1;
+  min-width: 280px;
+}
+
+.opcao {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.opcao input {
+  width: auto;
+}
+
+.opcao label {
+  font-weight: 400;
+}
+
+.rodape-config {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 40px;
+}
+
+.msg-ok {
+  color: var(--campo);
+  font-weight: 700;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+/* ==========================================================================
+   OPÇÕES DE BAIXA DE ANIMAL E ESTADOS ESPECÍFICOS
+   ========================================================================== */
+
+.opcoes-baixa {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.opcoes-baixa label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid var(--linha);
+  border-radius: calc(var(--raio) - 2px);
+  background: var(--papel);
+  cursor: pointer;
+  font-weight: 400;
+}
+
+.opcoes-baixa input {
+  width: auto;
+}
+
+.opcoes-baixa label:has(input:checked) {
+  border-color: var(--campo);
+  background: var(--campo-suave);
+  font-weight: 700;
+}
+
+.dica {
+  color: var(--suave);
+  font-size: 0.85rem;
+  margin-top: 10px;
+}
+
+button.perigo {
+  background: var(--alerta);
+}
+
+button.perigo:hover {
+  background: var(--alerta);
+  filter: brightness(0.9);
+}
+/* ==========================================================================
+   MENU PRINCIPAL: CARD DE ALERTAS
+   (cole no fim do seu CSS unificado; usa as mesmas variáveis e o mesmo visual)
+   ========================================================================== */
+
+.caixa-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.caixa .caixa-topo h2 { margin-bottom: 0; } /* mais específico que ".caixa h2" */
+
+.caixa-topo a,
+.alertas-mais {
+  color: var(--campo);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.caixa-topo a:hover,
+.alertas-mais:hover { text-decoration: underline; }
+
+.grupo-alertas + .grupo-alertas { margin-top: 20px; }
+
+.grupo-alertas h3 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--suave);
+}
+
+.contagem {
+  min-width: 28px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--campo-suave);
+  color: var(--campo);
+  font-size: 0.775rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.contagem.alerta {
+  background: var(--alerta-fundo);
+  color: var(--alerta);
+}
+
+.alertas-lista { list-style: none; }
+
+.alertas-lista li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--linha);
+  font-size: 0.9rem;
+}
+
+.alertas-lista li:last-child { border-bottom: 0; }
+
+.alertas-lista li a {
+  color: var(--texto);
+  font-weight: 600;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.alertas-lista li a:hover {
+  color: var(--campo);
+  text-decoration: underline;
+}
+
+.alertas-lista .detalhe {
+  color: var(--suave);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.alertas-lista .detalhe.urgente {
+  color: var(--alerta);
+  font-weight: 700;
+}
+
+.alertas-vazio {
+  color: var(--suave);
+  font-size: 0.9rem;
+}
+
+.alertas-mais {
+  display: inline-block;
+  margin-top: 6px;
+}

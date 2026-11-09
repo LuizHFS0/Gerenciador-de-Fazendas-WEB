@@ -47,27 +47,16 @@
         </div>
 
         <div class="caixa">
-        <h2>Níveis de estoque</h2>
-        <div class="barra">
-            <div><span>Ração bovina</span><span>72%</span></div>
-            <div class="trilho"><i style="width:10%"></i></div>
+        <div class="caixa-topo">
+            <h2>Alertas</h2>
+            <a href="./paginas/alertas.html">Ver todos</a>
         </div>
-        <div class="barra">
-            <div><span>Sal mineral</span><span>55%</span></div>
-            <div class="trilho"><i style="width:55%"></i></div>
-        </div>
-        <div class="barra">
-            <div><span>Diesel</span><span>18%</span></div>
-            <div class="trilho"><i style="width:18%"></i></div>
-        </div>
-        <div class="barra">
-            <div><span>Vacina aftosa</span><span>12%</span></div>
-            <div class="trilho"><i class="baixo" style="width:12%"></i></div>
-        </div>
+        <div id="listaAlertas" aria-live="polite"><p class="alertas-vazio">Carregando alertas...</p></div>
         </div>
     </section>
     </main>
         <script src="scripts/sessao.js"></script>
+        <script src="./scripts/config-fazenda.js"></script>
         <script src="./scripts/script.js"></script>
     </body>
 </html>

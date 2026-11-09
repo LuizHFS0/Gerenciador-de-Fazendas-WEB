@@ -37,3 +37,4 @@
 {"t": "2026-11-05 11:10:57", "evento": "acesso_negado", "fazenda": 1, "usuario_id": 5, "usuario": "Joaquim.Antonio", "ip": "127.0.0.1", "detalhe": "GET /favicon.ico"}
 {"t": "2026-11-05 11:11:39", "evento": "acesso_negado", "fazenda": 1, "usuario_id": 5, "usuario": "Joaquim.Antonio", "ip": "127.0.0.1", "detalhe": "GET /favicon.ico"}
 {"t": "2026-11-07 16:25:12", "evento": "login_ok", "fazenda": 1, "usuario_id": 2, "usuario": "dono", "ip": "127.0.0.1", "detalhe": ""}
+{"t": "2026-11-08 11:29:40", "evento": "login_ok", "fazenda": 1, "usuario_id": 2, "usuario": "dono", "ip": "127.0.0.1", "detalhe": ""}

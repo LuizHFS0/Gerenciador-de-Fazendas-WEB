@@ -41,6 +41,7 @@ POLITICA = [
     _regra("GET POST PUT DELETE", r"^/api/funcionarios/\d+/acesso$", "gerente"),
     # excluir (marcar ativo = 0) e editar a estrutura: Gerente ou Dono
     _regra("DELETE", r"^/(excluirAnimal|excluirMaquina|excluirItem|excluirLote)/\d+$", "gerente"),
+    _regra("POST", r"^/baixaAnimal/\d+$", "gerente"),
     _regra("PUT", r"^/editarLote/\d+$", "gerente"),
     # dia a dia: qualquer usuário logado
     _regra("GET", r"^/(dashboard|movimentacoesDashboard|obterLogsEstoque|consultarAnimais|consultarAnimal/\d+|pesagens/\d+|vacinas/\d+"
