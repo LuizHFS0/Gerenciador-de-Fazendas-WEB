@@ -1,0 +1,7 @@
+tunnel: ID_DO_TUNEL
+credentials-file: /etc/cloudflared/ID_DO_TUNEL.json
+
+ingress:
+  - hostname: app.seudominio.com
+    service: http://127.0.0.1:8000
+  - service: http_status:404
