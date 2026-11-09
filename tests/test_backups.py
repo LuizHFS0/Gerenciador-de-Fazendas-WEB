@@ -24,12 +24,13 @@ def test_copiar_consistente_preserva_dados(tmp_path):
         assert conn.execute("SELECT valor FROM exemplo").fetchone()[0] == "registro importante"
 
 
-def test_backup_inclui_bancos_de_fazendas_e_manifesto(tmp_path):
+def test_backup_inclui_bancos_de_fazendas_e_manifesto(tmp_path, monkeypatch):
     pasta_dados = tmp_path / "dados"
-    caminhos.configurar(pasta_dados)
+    monkeypatch.setattr(caminhos, "_dados", pasta_dados)
     _criar_banco(pasta_dados / "admin.db", "admin")
     _criar_banco(pasta_dados / "superadmin.db", "superadmin")
     _criar_banco(pasta_dados / "fazendas" / "1.db", "fazenda 1")
+    monkeypatch.setenv("FAZENDAWEB_BACKUPS", str(tmp_path / "backups"))
 
     destino = backups.backup()
 
