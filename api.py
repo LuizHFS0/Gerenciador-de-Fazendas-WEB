@@ -1,7 +1,7 @@
 import sqlite3
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse, Response, HTMLResponse, JSONResponse
 from starlette.background import BackgroundTask
 import os
 import tempfile
@@ -23,6 +23,63 @@ from logs import registrar_log, nome_de
 app = FastAPI()
 
 FRONTEND_DIR = Path(__file__).parent / "front-end"
+
+
+@app.exception_handler(404)
+async def pagina_404(request, exc):
+    """Mostra uma página amigável em navegações web e mantém JSON para chamadas de API."""
+    aceita_html = "text/html" in request.headers.get("accept", "").lower()
+
+    if not aceita_html:
+        detalhe = getattr(exc, "detail", "O recurso solicitado não foi encontrado.")
+        return JSONResponse(status_code=404, content={"detail": detalhe})
+
+    html = """
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="theme-color" content="#213520">
+      <title>Página não encontrada | FazendaWEB</title>
+      <style>
+        * { box-sizing: border-box; }
+        body {
+          margin: 0; min-height: 100vh; display: grid; place-items: center;
+          padding: 24px; background: #f3f1ea; color: #213520;
+          font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        main {
+          width: min(100%, 520px); padding: 48px 38px; text-align: center;
+          background: #fff; border: 1px solid #e4e0d4; border-radius: 18px;
+          box-shadow: 0 18px 55px rgba(33, 53, 32, .08);
+        }
+        .marca { font-size: 14px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+        .codigo { margin: 34px 0 8px; color: #8a5a2b; font-size: clamp(64px, 15vw, 92px); line-height: 1; font-weight: 800; }
+        h1 { margin: 0 0 12px; font-size: clamp(22px, 5vw, 28px); }
+        p { margin: 0 auto 28px; max-width: 360px; color: #687365; line-height: 1.65; }
+        a {
+          display: inline-flex; align-items: center; justify-content: center;
+          min-height: 46px; padding: 0 22px; border-radius: 9px;
+          background: #2f4a2b; color: #fff; text-decoration: none; font-weight: 650;
+          transition: background .2s ease, transform .2s ease;
+        }
+        a:hover { background: #213520; transform: translateY(-1px); }
+        @media (max-width: 420px) { main { padding: 38px 22px; } }
+      </style>
+    </head>
+    <body>
+      <main>
+        <div class="marca">FazendaWEB</div>
+        <div class="codigo">404</div>
+        <h1>Não encontramos essa página</h1>
+        <p>O endereço pode estar incorreto ou a página pode ter sido movida. Confira o link ou volte ao início.</p>
+        <a href="/">Voltar ao início</a>
+      </main>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html, status_code=404)
 
 
 @app.get("/favicon.ico", include_in_schema=False)
