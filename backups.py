@@ -1,6 +1,6 @@
 """Backups consistentes dos bancos SQLite do FazendaWEB.
 
-O backup usa a API sqlite3.Connection.backup(), que inclui transações ainda no WAL.
+A API sqlite3.Connection.backup() inclui transações ainda no WAL.
 Nunca copie um .db ativo com shutil.copy().
 """
 import argparse
@@ -11,9 +11,9 @@ import shutil
 import sqlite3
 import sys
 import tempfile
+from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import quote
 
 import caminhos
 
@@ -28,9 +28,9 @@ def integridade(caminho):
     if not caminho.is_file():
         return "arquivo inexistente"
     try:
-        with sqlite3.connect(_uri_somente_leitura(caminho), uri=True, timeout=30) as conn:
+        with closing(sqlite3.connect(_uri_somente_leitura(caminho), uri=True, timeout=30)) as conn:
             resultado = conn.execute("PRAGMA integrity_check").fetchone()
-        return str(resultado[0]) if resultado else "sem resultado"
+            return str(resultado[0]) if resultado else "sem resultado"
     except (sqlite3.Error, OSError, ValueError) as erro:
         return f"erro: {type(erro).__name__}: {erro}"
 
@@ -47,8 +47,8 @@ def copiar_consistente(origem, destino):
         raise FileExistsError(f"O destino já existe: {destino}")
 
     try:
-        with sqlite3.connect(_uri_somente_leitura(origem), uri=True, timeout=30) as fonte:
-            with sqlite3.connect(str(destino), timeout=30) as copia:
+        with closing(sqlite3.connect(_uri_somente_leitura(origem), uri=True, timeout=30)) as fonte:
+            with closing(sqlite3.connect(str(destino), timeout=30)) as copia:
                 fonte.backup(copia, pages=256, sleep=0.1)
                 copia.commit()
     except Exception:
