@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Interessados | Administração FazendaWEB</title>
+  <link rel="stylesheet" href="estilo/admin.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">FazendaWEB <small>Administração</small></div>
+    <nav aria-label="Navegação do painel" style="display:contents">
+      <ul class="menu">
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="fazendas.html">Fazendas</a></li>
+        <li><a href="interessados.html" class="ativo" aria-current="page">Interessados</a></li>
+        <li><a href="auditoria.html">Auditoria</a></li>
+      </ul>
+    </nav>
+    <div class="usuario"><span class="avatar" aria-hidden="true">A</span><span>Admin</span></div>
+  </header>
+  <main>
+    <h1>Contatos interessados</h1>
+    <p class="sub">Pessoas que preencheram o formulário na página inicial do FazendaWEB.</p>
+    <p class="erro" id="erroPagina" role="alert" hidden></p>
+    <div class="filtros">
+      <div class="campo"><label for="filtroStatus">Situação</label>
+        <select id="filtroStatus"><option value="">Todos</option><option value="novo">Novos</option><option value="contatado">Contatados</option><option value="arquivado">Arquivados</option></select>
+      </div>
+      <div class="espaco"></div><button type="button" id="btnAtualizar">Atualizar lista</button>
+    </div>
+    <div class="tabela-area"><table>
+      <thead><tr><th>Recebido em</th><th>Nome / Fazenda</th><th>E-mail</th><th>Telefone</th><th>Mensagem</th><th>Situação</th></tr></thead>
+      <tbody id="corpo"><tr><td colspan="6" class="vazio">Carregando contatos...</td></tr></tbody>
+    </table></div>
+    <div class="paginacao"><span id="infoPagina"></span><div class="botoes"><button type="button" class="secundario" id="btnAnterior">Anterior</button><span id="numeroPagina"></span><button type="button" class="secundario" id="btnProxima">Próxima</button></div></div>
+  </main>
+  <script src="scripts/admin-config.js"></script><script src="scripts/sessao.js"></script>
+  <script src="scripts/admin-comum.js"></script><script src="scripts/admin-interessados.js"></script>
+</body>
+</html>
