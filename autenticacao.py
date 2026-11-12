@@ -39,7 +39,7 @@ PAGINA_TROCA = "/front-end/trocar-senha.html"
 PAGINA_INICIAL = "/front-end/dashboard.html"
 NIVEIS_CRIAVEIS = ("gerente", "funcionario")
 METODOS_SEGUROS = ("GET", "HEAD", "OPTIONS")
-PUBLICAS = {("GET", "/"), ("POST", "/api/auth/login"), ("POST", "/api/auth/logout"), ("GET", PAGINA_LOGIN), ("GET", "/favicon.ico")}
+PUBLICAS = {("GET", "/"), ("POST", "/api/interessados"), ("POST", "/api/auth/login"), ("POST", "/api/auth/logout"), ("GET", PAGINA_LOGIN), ("GET", "/favicon.ico")}
 LIBERADAS_NA_TROCA = {"/api/auth/eu", "/api/auth/trocar-senha", PAGINA_TROCA}
 
 JANELA_FALHAS = 15 * 60
