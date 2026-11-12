@@ -109,8 +109,27 @@
     .rodape .marca { color: #fff; }
     .rodape p { margin: 0; font-size: .82rem; }
     .rodape a { color: #e4bd70; text-decoration: none; font-size: .86rem; font-weight: 700; }
+
+    .contato-formulario { padding:88px 0; background:#f8f7f1; }
+    .contato-grid { display:grid; grid-template-columns:.8fr 1.2fr; gap:54px; align-items:start; }
+    .contato-intro p { color:var(--suave); }
+    .formulario { display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:28px; border:1px solid var(--linha); border-radius:14px; background:#fff; box-shadow:0 12px 35px rgba(19,40,31,.06); }
+    .form-campo { display:flex; flex-direction:column; gap:6px; }
+    .form-campo.completo, .formulario button, .form-status { grid-column:1 / -1; }
+    .form-campo label { color:#34483a; font-size:.88rem; font-weight:700; }
+    .form-campo input, .form-campo textarea { width:100%; min-height:46px; padding:11px 13px; border:1px solid #dce3dc; border-radius:8px; color:var(--texto); background:#fff; font:inherit; }
+    .form-campo textarea { min-height:110px; resize:vertical; }
+    .form-campo input:focus, .form-campo textarea:focus { outline:2px solid var(--verde); outline-offset:1px; }
+    .formulario button { justify-self:start; }
+    .form-status { margin:0; font-size:.9rem; }
+    .form-status.sucesso { color:#24613b; } .form-status.erro { color:#a33b2b; }
+    .campo-armadilha { position:absolute; left:-10000px; width:1px; height:1px; overflow:hidden; }
+    .contatos-rodape { display:flex; flex-direction:column; gap:7px; }
+    .contatos-rodape a { color:#e4bd70; text-decoration:none; font-size:.86rem; font-weight:700; }
+    .contatos-rodape a:hover { text-decoration:underline; }
+
     @media (max-width: 900px) {
-      .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+      .contato-grid { grid-template-columns:1fr; gap:28px; }\n      .hero-grid { grid-template-columns: 1fr; gap: 40px; }
       .hero-copy { max-width: 700px; }
       .preview-wrap { width: min(620px,100%); margin: 0 auto; }
       .recursos { grid-template-columns: repeat(2,1fr); }
@@ -128,7 +147,7 @@
       h1 { font-size: clamp(2.55rem,12vw,3.8rem); }
       .hero-texto { font-size: 1rem; }
       section.conteudo { padding: 70px 0; }
-      .recursos { grid-template-columns: 1fr; }
+      .recursos { grid-template-columns: 1fr; }\n      .contato-formulario { padding:68px 0; }\n      .formulario { grid-template-columns:1fr; padding:22px; }\n      .form-campo.completo, .formulario button, .form-status { grid-column:1; }
       .destaque { grid-template-columns: 1fr; padding: 30px 24px; }
       .bloco-destaque { padding-bottom: 70px; }
       .rodape { flex-direction: column; align-items: flex-start; }
@@ -297,6 +316,21 @@
       </div>
     </section>
 
+
+    <section class="contato-formulario" id="contato">
+      <div class="container contato-grid">
+        <div class="contato-intro"><span class="sobretitulo">Fale com a gente</span><h2>Quer conhecer melhor o FazendaWEB?</h2><p>Preencha seus dados. Vamos receber sua mensagem e entrar em contato para conversar sobre a gestão da sua propriedade.</p></div>
+        <form class="formulario" id="formInteresse">
+          <div class="form-campo"><label for="interesseNome">Seu nome *</label><input id="interesseNome" name="nome" autocomplete="name" maxlength="100" required></div>
+          <div class="form-campo"><label for="interesseEmail">Seu e-mail *</label><input id="interesseEmail" name="email" type="email" autocomplete="email" maxlength="254" required></div>
+          <div class="form-campo"><label for="interesseTelefone">WhatsApp / telefone com DDD *</label><input id="interesseTelefone" name="telefone" type="tel" autocomplete="tel" maxlength="30" placeholder="(00) 00000-0000" required></div>
+          <div class="form-campo"><label for="interesseFazenda">Nome da fazenda</label><input id="interesseFazenda" name="fazenda" maxlength="120"></div>
+          <div class="form-campo completo"><label for="interesseMensagem">Como podemos ajudar?</label><textarea id="interesseMensagem" name="mensagem" maxlength="1000" placeholder="Conte um pouco sobre o que você procura (opcional)."></textarea></div>
+          <div class="campo-armadilha" aria-hidden="true"><label for="interesseWebsite">Não preencha este campo</label><input id="interesseWebsite" name="website" tabindex="-1" autocomplete="off"></div>
+          <button class="botao botao-principal" id="enviarInteresse" type="submit">Enviar contato <span aria-hidden="true">→</span></button><p class="form-status" id="statusInteresse" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
     <section class="cta">
       <div class="container">
         <span class="sobretitulo">Sua fazenda conectada</span>
@@ -310,12 +344,28 @@
   <footer>
     <div class="container rodape">
       <a class="marca" href="/"><span class="marca-simbolo" aria-hidden="true">F</span> FazendaWEB</a>
-      <p>Gestão rural com mais organização.</p>
+      <div class="contatos-rodape"><a href="https://wa.me/5538999954195" target="_blank" rel="noopener noreferrer">WhatsApp: (38) 99995-4195</a><a href="mailto:luizhf2018@gmail.com">E-mail: luizhf2018@gmail.com</a></div>
       <a href="/front-end/login.html">Acessar sistema</a>
     </div>
   </footer>
 
   <script>
+
+    const formInteresse = document.getElementById("formInteresse");
+    const statusInteresse = document.getElementById("statusInteresse");
+    const botaoEnviar = document.getElementById("enviarInteresse");
+    formInteresse.addEventListener("submit", async evento => {
+      evento.preventDefault(); statusInteresse.textContent = ""; statusInteresse.className = "form-status";
+      botaoEnviar.disabled = true; botaoEnviar.textContent = "Enviando...";
+      const dados = Object.fromEntries(new FormData(formInteresse).entries());
+      try {
+        const resposta = await fetch("/api/interessados", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(dados)});
+        const resultado = await resposta.json().catch(() => ({}));
+        if (!resposta.ok) throw new Error(resultado.detail || "Não foi possível enviar. Tente novamente.");
+        statusInteresse.textContent = resultado.message || "Contato enviado com sucesso!"; statusInteresse.classList.add("sucesso"); formInteresse.reset();
+      } catch (erro) { statusInteresse.textContent = erro.message || "Falha ao enviar. Tente novamente."; statusInteresse.classList.add("erro"); }
+      finally { botaoEnviar.disabled = false; botaoEnviar.innerHTML = 'Enviar contato <span aria-hidden="true">→</span>'; }
+    });
     const botaoMenu = document.getElementById("abrirMenu");
     const menu = document.getElementById("menu");
     botaoMenu.addEventListener("click", () => {
