@@ -95,6 +95,45 @@ def favicon():
 def pagina_inicial():
     return FileResponse(Path(__file__).parent / "home.html")
 
+
+@app.post("/api/interessados", status_code=201)
+def receber_interessado(dados: dict, request: Request):
+    """Recebe contato público e grava somente no banco administrativo."""
+    import re
+    import admin_banco
+    if str(dados.get("website") or "").strip():
+        return {"message": "Recebemos seu contato."}
+    def campo(nome, limite, obrigatorio=False):
+        valor = dados.get(nome, "")
+        if not isinstance(valor, str):
+            raise HTTPException(status_code=400, detail="Dados inválidos.")
+        valor = valor.strip()
+        if obrigatorio and not valor:
+            raise HTTPException(status_code=400, detail="Preencha os campos obrigatórios.")
+        if len(valor) > limite:
+            raise HTTPException(status_code=400, detail="Um dos campos ultrapassou o tamanho permitido.")
+        return valor
+    nome, email = campo("nome", 100, True), campo("email", 254, True).lower()
+    telefone, fazenda = campo("telefone", 30, True), campo("fazenda", 120)
+    mensagem = campo("mensagem", 1000)
+    if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email):
+        raise HTTPException(status_code=400, detail="Informe um e-mail válido.")
+    digitos = re.sub(r"\D", "", telefone)
+    if len(digitos) < 10 or len(digitos) > 15:
+        raise HTTPException(status_code=400, detail="Informe um telefone com DDD.")
+    admin_banco.garantir_admin_db()
+    conn = admin_banco.abrir_admin()
+    try:
+        conn.execute(
+            """INSERT INTO interessados (nome,email,telefone,fazenda,mensagem,criado_em)
+               VALUES (?,?,?,?,?,?)""",
+            (nome,email,telefone,fazenda,mensagem,admin_banco.agora()))
+        conn.commit()
+    finally:
+        conn.close()
+    return {"message": "Contato enviado com sucesso! Em breve entraremos em contato."}
+
+
 app.mount(
     "/front-end",
     StaticFiles(directory=FRONTEND_DIR),
