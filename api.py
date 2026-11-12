@@ -93,7 +93,7 @@ def favicon():
 
 @app.get("/")
 def pagina_inicial():
-    return FileResponse(FRONTEND_DIR / "dashboard.html")
+    return FileResponse(FRONTEND_DIR / "landing.html")
 
 app.mount(
     "/front-end",
