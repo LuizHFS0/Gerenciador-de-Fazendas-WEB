@@ -53,6 +53,11 @@ def garantir_admin_db():
         for codigo, nome in PLANOS_INICIAIS:
             conn.execute("INSERT OR IGNORE INTO planos (codigo, nome, ativo) VALUES (?, ?, 1)", (codigo, nome))
         conn.execute("CREATE INDEX IF NOT EXISTS idx_fazendas_plano ON fazendas(plano, pagamento, ativa)")
+        conn.execute("""CREATE TABLE IF NOT EXISTS interessados(
+            id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT NOT NULL, email TEXT NOT NULL,
+            telefone TEXT NOT NULL, fazenda TEXT, mensagem TEXT,
+            status TEXT NOT NULL DEFAULT 'novo', criado_em TEXT NOT NULL)""")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_interessados_criado ON interessados(id DESC)")
         conn.commit()
     finally:
         conn.close()
