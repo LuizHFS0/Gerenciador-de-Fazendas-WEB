@@ -516,6 +516,43 @@ def criar_admin_app(pasta_front=None):
         return {"acesso": {"codigo_fazenda": l["codigo"], "usuario": acesso["usuario"],
                            "senha_temporaria": acesso["senha_temporaria"]}}
 
+
+    # ---------- contatos recebidos pela página pública ----------
+    @admin.get("/api/interessados")
+    def listar_interessados(pagina: int = 1, por_pagina: int = 20, status: str = ""):
+        if status not in ("", "novo", "contatado", "arquivado"):
+            raise _erro(400, "Situação inválida.")
+        pagina, por_pagina = max(1, pagina), min(100, max(5, por_pagina))
+        conn = admin_banco.abrir_admin()
+        try:
+            clausula = " WHERE status = ?" if status else ""
+            params = (status,) if status else ()
+            total = conn.execute("SELECT COUNT(*) FROM interessados" + clausula, params).fetchone()[0]
+            itens = [dict(l) for l in conn.execute(
+                "SELECT id,nome,email,telefone,fazenda,mensagem,status,criado_em FROM interessados" +
+                clausula + " ORDER BY id DESC LIMIT ? OFFSET ?",
+                (*params, por_pagina, (pagina - 1) * por_pagina))]
+        finally:
+            conn.close()
+        return {"itens": itens, "total": total, "pagina": pagina, "por_pagina": por_pagina,
+                "paginas": max(1, math.ceil(total / por_pagina))}
+
+    @admin.patch("/api/interessados/{interessado_id}")
+    def atualizar_interessado(interessado_id: int, dados: dict, request: Request):
+        status = dados.get("status")
+        if status not in ("novo", "contatado", "arquivado"):
+            raise _erro(400, "Situação inválida.")
+        conn = admin_banco.abrir_admin()
+        try:
+            cur = conn.execute("UPDATE interessados SET status = ? WHERE id = ?", (status, interessado_id))
+            if not cur.rowcount:
+                raise _erro(404, "Contato não encontrado.")
+            conn.commit()
+        finally:
+            conn.close()
+        _auditar(request, "interessado_atualizado", str(interessado_id), status)
+        return {"message": "Situação atualizada."}
+
     # ---------- auditoria do próprio painel ----------
     @admin.get("/api/auditoria")
     def auditoria(pagina: int = 1, por_pagina: int = 20):
