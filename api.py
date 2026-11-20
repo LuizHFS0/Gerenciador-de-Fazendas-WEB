@@ -208,6 +208,7 @@ def obter_dados_dashboard():
         "maquinas_operacao": contar("maquinas", "WHERE status = 'Ativo' AND ativo = 1"),
         "funcionarios_ativos": contar("funcionarios", "WHERE ativo = 1"),
         "estoque_baixo": contar("estoque", "WHERE ativo = 1 AND quantidade <= estoque_minimo"),
+        "animais_parceria": contar("animais", "WHERE ativo = 1 AND parceria = 1"),
     }
 
 @app.get("/movimentacoesDashboard")
@@ -753,6 +754,10 @@ def excluir_lote(lote_id: int):
 
     registrar_log("Exclusão", "lote", f'Lote "{nome}" desativado')
     return {"message": "Lote desativado!"}
+
+from rotas_parceria import instalar_rotas_parceria
+from autorizacao_parceria import checar_permissao_parceria
+instalar_rotas_parceria(app, consultar, executar, conectar, registrar_log, checar_permissao_parceria)
 
 
 # ---------- Utilitários: backup ----------

@@ -28,6 +28,7 @@ async function carregarDashboard() {
     definirTexto('#maquinas-em-operacao', dados.maquinas_operacao);
     definirTexto('#estoque-baixo', dados.estoque_baixo);
     definirTexto('#funcionarios-ativos', dados.funcionarios_ativos);
+    definirTexto('#animais-parceria', dados.animais_parceria ?? 0);
     desenharTabela();
   } catch (erro) {
     console.error('Falha ao carregar o dashboard:', erro);
@@ -130,6 +131,13 @@ async function carregarAlertas() {
     const dados = await resposta.json();
     const cfg = FW_CONFIG.get();      // tipos desligados em Configurações nem aparecem aqui
 
+    // saída de lotes em parceria (prazo fixo de 7 dias; não depende dos interruptores de Configurações)
+    let saidas = [];
+    try {
+      const r2 = await fetch("/alertasParceria");
+      if (r2.ok) saidas = (await r2.json()).alertas;
+    } catch (_) { /* sem alerta de parceria: o resto da tela segue normal */ }
+
     const grupos = [
       { ligado: cfg.notif_vacinas, titulo: "Vacinas chegando", vazio: "Nenhuma vacina próxima.",
         itens: dados.vacinas.map(v => ({ texto: `${v.animal} · ${v.vacina}`, href: `./paginas/animal.html?id=${v.animal_id}`, ...situacao(v.proxima_dose) })) },
@@ -139,6 +147,17 @@ async function carregarAlertas() {
       { ligado: cfg.notif_manutencoes, titulo: "Manutenções pendentes", vazio: "Nenhuma manutenção pendente.",
         itens: dados.manutencoes.map(m => ({ texto: m.maquina, href: `./paginas/maquina.html?id=${m.maquina_id}`, ...situacao(m.proxima_manutencao) })) }
     ].filter(g => g.ligado);
+
+    if (saidas.length > 0) {
+      grupos.push({ titulo: "Saída de lotes em parceria", vazio: "", itens: saidas.map(a => ({
+        texto: `${a.lote} · ${a.parceiro || "sem parceiro"} (${a.animais} animais)`,
+        href: "./paginas/animais.html",
+        urgente: a.nivel === "urgente",
+        detalhe: a.dias_restantes < 0 ? `saída vencida há ${-a.dias_restantes} ${a.dias_restantes === -1 ? "dia" : "dias"}`
+               : a.dias_restantes === 0 ? "sai hoje"
+               : `sai em ${a.dias_restantes} ${a.dias_restantes === 1 ? "dia" : "dias"}`
+      })) });
+    }
 
     area.innerHTML = "";
     if (grupos.length === 0) {

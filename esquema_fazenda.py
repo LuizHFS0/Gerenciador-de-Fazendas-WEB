@@ -3,6 +3,9 @@
 garantir_esquema() pode rodar quantas vezes for preciso: só cria o que falta.
 """
 
+import esquema_parceria
+
+
 TABELAS = [
     """CREATE TABLE IF NOT EXISTS animais(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -242,6 +245,8 @@ def garantir_esquema(conn):
         existentes = {linha[1] for linha in conn.execute(f"PRAGMA table_info({tabela})")}
         if coluna not in existentes:
             conn.execute(f"ALTER TABLE {tabela} ADD COLUMN {coluna} {definicao}")
+    # lote em parceria: tabela parceiros e colunas novas (precisa rodar DEPOIS de criar lote e animais)
+    esquema_parceria.aplicar(conn)
     conn.execute("""INSERT INTO schema_versao (id, versao, atualizada_em) VALUES (1, ?, datetime('now', 'localtime'))
                     ON CONFLICT(id) DO UPDATE SET versao = excluded.versao, atualizada_em = excluded.atualizada_em""",
                  (SCHEMA_VERSAO,))

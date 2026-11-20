@@ -87,6 +87,25 @@ async function carregarAlertas() {
 
 carregarAlertas();
 
+// saída de lotes em parceria (prazo fixo de 7 dias)
+async function carregarAlertasParceria() {
+  try {
+    const r = await fetch(`${API}/alertasParceria`);
+    if (!r.ok) throw new Error(`Erro ${r.status}`);
+    const lista = (await r.json()).alertas;
+    $("tituloParceria").textContent = `Saída de lotes em parceria (${lista.length})`;
+    desenhar($("corpoParceria"), lista.map(a => {
+      const s = situacao(a.data_prevista_saida);
+      return [{ texto: a.lote, href: "animais.html" }, a.parceiro || "-", formatarNumero(a.animais),
+              formatarData(a.data_prevista_saida), { texto: s.texto, urgente: a.nivel === "urgente" }];
+    }), 5, "Nenhuma saída prevista para os próximos 7 dias.");
+  } catch (erro) {
+    console.error("Falha ao carregar alertas de parceria:", erro);
+  }
+}
+
+carregarAlertasParceria();
+
 // o texto acompanha a antecedência escolhida em Configurações
 FW_CONFIG.pronto.then(() => {
   document.getElementById("subAlertas").textContent =

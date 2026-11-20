@@ -22,7 +22,8 @@ async function carregarAnimais() {
       nascimento: a.data_nascimento ?? a.nascimento,
       status: a.status,
       lote: a.lote ?? a.lote_id,
-      observacoes: a.observacoes
+      observacoes: a.observacoes,
+      parceria: a.parceria
     })));
   } catch (erro) {
     console.error("Falha ao carregar animais:", erro);
@@ -76,7 +77,7 @@ function desenharTabela() {
     tr.dataset.id = a.id;
     if (a.id === selecionadoId) tr.classList.add("selecionada");
 
-    [a.id, a.brinco, a.nome, a.tipo, a.sexo, formatarPeso(a.peso), formatarData(a.nascimento), a.status, a.lote]
+    [a.id, a.brinco, a.nome, a.tipo, a.sexo, formatarPeso(a.peso), formatarData(a.nascimento), a.status, a.parceria ? `${a.lote} (parceria)` : a.lote]
       .forEach(valor => {
         const td = document.createElement("td");
         td.textContent = valor;
@@ -130,6 +131,7 @@ document.getElementById("cancelarCadastro").addEventListener("click", () => moda
 
 formCadastro.addEventListener("submit", async e => {
   e.preventDefault();
+  if (window.Parceria && window.Parceria.ativo()) { await window.Parceria.enviar(); return; }
 
   const nome = document.getElementById("nome").value.trim();
   const brinco = document.getElementById("brinco").value.trim();

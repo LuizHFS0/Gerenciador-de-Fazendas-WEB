@@ -47,9 +47,11 @@ POLITICA = [
     _regra("GET", r"^/(dashboard|movimentacoesDashboard|obterLogsEstoque|consultarAnimais|consultarAnimal/\d+|pesagens/\d+|vacinas/\d+"
                   r"|consultarLotes|consultarMaquinas|consultarMaquina/\d+|manutencoes/\d+|consultarEstoque"
                   r"|consultarItem/\d+|movimentacoes/\d+|alertas|gerenciarLotes|dashboardLeite|vacasDoLote/[^/]+"
-                  r"|consultarProducaoLeite|relatorioLeite)$", "funcionario"),
+                  r"|consultarProducaoLeite|relatorioLeite|parceiros|lotesParceria|alertasParceria)$", "funcionario"),
+    # lote em parceria: a regra "Funcionário só com a senha do gerente" é aplicada dentro da rota
     _regra("POST", r"^/(cadastrarAnimal|cadastrarMaquina|cadastrarItem|cadastrarLote|registrarProducaoLeite"
-                   r"|pesagens/\d+|vacinas/\d+|manutencoes/\d+|movimentacoes/\d+)$", "funcionario"),
+                   r"|pesagens/\d+|vacinas/\d+|manutencoes/\d+|movimentacoes/\d+"
+                   r"|cadastrarLoteParceria|saidaLoteParceria/\d+|pesosEntradaLote/\d+)$", "funcionario"),
     _regra("PUT", r"^/(alterarLote|alterarStatus|alterarStatusMaquina)/\d+$", "funcionario"),
 ]
 
