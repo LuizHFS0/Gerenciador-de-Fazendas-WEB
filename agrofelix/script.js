@@ -15,7 +15,7 @@ document.getElementById('year').textContent = new Date().getFullYear();
 const WHATSAPP_NUMBER = 'INSIRA_SEU_NUMERO';
 const whatsappLink = document.getElementById('whatsapp-link');
 whatsappLink.addEventListener('click', (event) => {
-  if (!/^\\d{12,13}$/.test(WHATSAPP_NUMBER)) {
+  if (!/^\d{12,13}$/.test(WHATSAPP_NUMBER)) {
     event.preventDefault();
     alert('O WhatsApp da Agrofelix ainda precisa ser configurado. Edite a variável WHATSAPP_NUMBER no arquivo script.js.');
     return;
