@@ -195,7 +195,10 @@ async def middleware(request: Request, call_next):
     if metodo not in METODOS_SEGUROS and not _origem_permitida(request):
         return _cabecalhos(JSONResponse({"detail": "Origem não permitida."}, status_code=403))
 
-    if (metodo, caminho) in PUBLICAS:
+    # A vitrine pública da Agrofelix não utiliza sessão do FazendaWEB.
+    if ((metodo, caminho) in PUBLICAS
+            or (metodo in METODOS_SEGUROS and
+                (caminho == "/agrofelix" or caminho.startswith("/agrofelix/")))):
         return _cabecalhos(await call_next(request))
 
     sessao = await run_in_threadpool(carregar_sessao, request.cookies.get(COOKIE))
