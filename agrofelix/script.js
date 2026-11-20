@@ -12,12 +12,12 @@ document.getElementById('year').textContent = new Date().getFullYear();
 
 // Configure o WhatsApp oficial da loja em formato internacional, somente números.
 // Exemplo de formato: 5531999999999 (55 + DDD + número).
-const WHATSAPP_NUMBER = 'INSIRA_SEU_NUMERO';
+const WHATSAPP_NUMBER = '5538999360703';
 const whatsappLink = document.getElementById('whatsapp-link');
 whatsappLink.addEventListener('click', (event) => {
   if (!/^\d{12,13}$/.test(WHATSAPP_NUMBER)) {
     event.preventDefault();
-    alert('O WhatsApp da Agrofelix ainda precisa ser configurado. Edite a variável WHATSAPP_NUMBER no arquivo script.js.');
+    alert('Não foi possível abrir o WhatsApp. Confira o número configurado no site.');
     return;
   }
   event.preventDefault();
