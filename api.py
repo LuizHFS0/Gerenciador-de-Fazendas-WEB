@@ -141,6 +141,22 @@ app.mount(
 )
 
 
+# Landing page pública da Agrofelix, independente da página inicial do FazendaWEB.
+AGROFELIX_DIR = Path(__file__).parent / "agrofelix"
+
+
+@app.get("/agrofelix", include_in_schema=False)
+def pagina_agrofelix():
+    return FileResponse(AGROFELIX_DIR / "index.html")
+
+
+app.mount(
+    "/agrofelix",
+    StaticFiles(directory=AGROFELIX_DIR, html=True),
+    name="agrofelix"
+)
+
+
 # Login por fazenda, sessões e proteção de TODAS as rotas (etapa 1)
 from autenticacao import instalar_autenticacao, exigir_dono
 instalar_autenticacao(app)
