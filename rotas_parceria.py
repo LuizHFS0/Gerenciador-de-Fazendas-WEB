@@ -89,16 +89,22 @@ def instalar_rotas_parceria(app, consultar, executar, conectar, registrar_log, c
 
         lote = d.get("lote") or {}
         nome_lote = (lote.get("nome") or "").strip()
-        parceiro = (d.get("parceiro") or "").strip()
+        comum = d.get("tipo") == "comum"          # lote comum: sem parceiro, sem data de saída
+        parceiro = "" if comum else (d.get("parceiro") or "").strip()
         if not nome_lote:
             raise HTTPException(status_code=400, detail="Informe o nome do lote.")
-        if not parceiro:
-            raise HTTPException(status_code=400, detail="Informe o nome do fazendeiro parceiro.")
-        if len(parceiro) > 120:
-            raise HTTPException(status_code=400, detail="O nome do parceiro é longo demais.")
-        previsto = _data(d.get("data_prevista_saida"), "Informe a data prevista de saída.")
-        if previsto < date.today():
-            raise HTTPException(status_code=400, detail="A data prevista de saída não pode ser no passado.")
+        previsto = None
+        if not comum:
+            if not parceiro:
+                raise HTTPException(status_code=400, detail="Informe o nome do fazendeiro parceiro.")
+            if len(parceiro) > 120:
+                raise HTTPException(status_code=400, detail="O nome do parceiro é longo demais.")
+            previsto = _data(d.get("data_prevista_saida"), "Informe a data prevista de saída.")
+            if previsto < date.today():
+                raise HTTPException(status_code=400, detail="A data prevista de saída não pode ser no passado.")
+        tipo_lote = "normal" if comum else "parceria"
+        data_saida = previsto.isoformat() if previsto else None
+        origem = "Cadastro em lote" if comum else f"Parceria: {parceiro}"
         grupos = _grupos_cadastro(d.get("grupos"))
         total = sum(g[2] for g in grupos)
 
@@ -125,26 +131,28 @@ def instalar_rotas_parceria(app, consultar, executar, conectar, registrar_log, c
             if existente and existente[1] == 1:
                 raise HTTPException(status_code=409, detail="Já existe um lote com esse nome.")
 
-            cur.execute("SELECT id FROM parceiros WHERE nome = ?", (parceiro,))     # NOCASE na coluna
-            linha = cur.fetchone()
-            if linha:
-                parceiro_id = linha[0]
-                cur.execute("UPDATE parceiros SET ativo = 1 WHERE id = ?", (parceiro_id,))
-            else:
-                cur.execute("INSERT INTO parceiros (nome, ativo) VALUES (?, 1)", (parceiro,))
-                parceiro_id = cur.lastrowid
+            parceiro_id = None
+            if not comum:
+                cur.execute("SELECT id FROM parceiros WHERE nome = ?", (parceiro,))     # NOCASE na coluna
+                linha = cur.fetchone()
+                if linha:
+                    parceiro_id = linha[0]
+                    cur.execute("UPDATE parceiros SET ativo = 1 WHERE id = ?", (parceiro_id,))
+                else:
+                    cur.execute("INSERT INTO parceiros (nome, ativo) VALUES (?, 1)", (parceiro,))
+                    parceiro_id = cur.lastrowid
 
             if existente:        # lote desativado com o mesmo nome: reativa o registro (o nome é único)
                 lote_id = existente[0]
                 cur.execute("""UPDATE lote SET tamanho = ?, localizacao = ?, descricao = ?, observacoes = ?,
-                                      tipo = 'parceria', parceiro_id = ?, data_prevista_saida = ?, ativo = 1
+                                      tipo = ?, parceiro_id = ?, data_prevista_saida = ?, ativo = 1
                                WHERE id = ?""",
-                            (tamanho, localizacao, descricao, observacoes, parceiro_id, previsto.isoformat(), lote_id))
+                            (tamanho, localizacao, descricao, observacoes, tipo_lote, parceiro_id, data_saida, lote_id))
             else:
                 cur.execute("""INSERT INTO lote (nome, tamanho, localizacao, descricao, observacoes,
                                                  tipo, parceiro_id, data_prevista_saida, ativo)
-                               VALUES (?, ?, ?, ?, ?, 'parceria', ?, ?, 1)""",
-                            (nome_lote, tamanho, localizacao, descricao, observacoes, parceiro_id, previsto.isoformat()))
+                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)""",
+                            (nome_lote, tamanho, localizacao, descricao, observacoes, tipo_lote, parceiro_id, data_saida))
                 lote_id = cur.lastrowid
 
             # o brinco continua de onde o lote parou, mesmo que já tenha tido animais antes
@@ -155,12 +163,12 @@ def instalar_rotas_parceria(app, consultar, executar, conectar, registrar_log, c
             for raca, sexo, qtd in grupos:
                 for _ in range(qtd):
                     seq += 1
-                    brinco = f"PARC-{lote_id:03d}-{seq:03d}"
+                    brinco = f"{'LOTE' if comum else 'PARC'}-{lote_id:03d}-{seq:03d}"
                     nome = f"{raca} {SUFIXO_SEXO[sexo]} {seq:03d}"
                     cur.execute("""INSERT INTO animais (brinco, nome, tipo, sexo, raca, peso_atual, data_nascimento,
                                                         status, lote_id, origem, observacoes, ativo, parceria)
-                                   VALUES (?, ?, 'Corte', ?, ?, NULL, NULL, 'Ativo', ?, ?, '', 1, 1)""",
-                                (brinco, nome, sexo, raca, lote_id, f"Parceria: {parceiro}"))
+                                   VALUES (?, ?, 'Corte', ?, ?, NULL, NULL, 'Ativo', ?, ?, '', 1, ?)""",
+                                (brinco, nome, sexo, raca, lote_id, origem, 0 if comum else 1))
                     criados.append({"id": cur.lastrowid, "nome": nome, "brinco": brinco})
             conn.commit()
         except sqlite3.IntegrityError:
@@ -169,10 +177,13 @@ def instalar_rotas_parceria(app, consultar, executar, conectar, registrar_log, c
         finally:
             conn.close()
 
-        registrar_log("Cadastro", "lote",
-                      f'Lote em parceria "{nome_lote}" cadastrado: {total} animais (parceiro {parceiro}, '
-                      f'saída prevista {previsto:%d/%m/%Y}{_por(autorizador)})')
-        return {"message": "Lote em parceria cadastrado!", "lote_id": lote_id, "animais": criados}
+        if comum:
+            detalhe = "lote comum"
+        else:
+            detalhe = f"parceria com {parceiro}, saída prevista {previsto:%d/%m/%Y}"
+        registrar_log("Cadastro", "lote", f'Lote "{nome_lote}" cadastrado: {total} animais ({detalhe}{_por(autorizador)})')
+        return {"message": "Lote cadastrado!" if comum else "Lote em parceria cadastrado!",
+                "lote_id": lote_id, "animais": criados}
 
     # ---------- Peso de entrada (opcional, depois do cadastro) ----------
     @app.post("/pesosEntradaLote/{lote_id}")

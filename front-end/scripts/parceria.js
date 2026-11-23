@@ -46,6 +46,7 @@
     <select id="tipoCadastro">
       <option value="individual">Animal individual</option>
       <option value="parceria">Lote em parceria</option>
+      <option value="comum">Lote comum</option>
     </select>`;
   titulo.after(seletor);
 
@@ -58,7 +59,7 @@
       <div class="campo"><label for="pTamanho">Tamanho (ha)</label><input type="number" id="pTamanho" min="0" step="0.01"></div>
       <div class="campo"><label for="pLocalizacao">Localização</label><input type="text" id="pLocalizacao"></div>
       <div class="campo"><label for="pDescricao">Descrição</label><input type="text" id="pDescricao"></div>
-      <div class="campo largo">
+      <div class="campo largo" id="campoParceiro">
         <label for="pParceiro">Fazendeiro parceiro (participação no lucro)</label>
         <input type="text" id="pParceiro" list="listaParceiros" autocomplete="off">
         <datalist id="listaParceiros"></datalist>
@@ -71,7 +72,7 @@
     </fieldset>
     <label class="pc-bloco" style="display:block"><input type="checkbox" id="pPesoIndividual"> Informar o peso de cada animal depois de salvar</label>
     <div class="grade pc-bloco">
-      <div class="campo"><label for="pDataPrevista">Data prevista de saída</label><input type="date" id="pDataPrevista"></div>
+      <div class="campo" id="campoPrevisto"><label for="pDataPrevista">Data prevista de saída</label><input type="date" id="pDataPrevista"></div>
       <div class="campo largo"><label for="pObs">Observações</label><textarea id="pObs" rows="3"></textarea></div>
     </div>
     <div id="blocoAutorizacao" class="pc-bloco" hidden>
@@ -165,15 +166,17 @@
   const ativo = () => $("tipoCadastro").value === "parceria";
 
   function aplicarModo() {
-    const parceria = ativo();
-    blocoIndividual.hidden = parceria;
-    blocoParceria.hidden = !parceria;
+    const tipo = $("tipoCadastro").value;
+    const lote = tipo !== "individual";
+    const parceria = tipo === "parceria";
+    blocoIndividual.hidden = lote;
+    blocoParceria.hidden = !lote;
+    $("campoParceiro").hidden = !parceria;
+    $("campoPrevisto").hidden = !parceria;
     $("erroCadastro").hidden = true;
-    titulo.textContent = parceria ? "Cadastrar lote em parceria" : "Cadastrar animal";
-    if (parceria) {
-      $("pDataPrevista").min = hoje();
-      if ($("gruposParceria").children.length === 0) adicionarGrupo();
-    }
+    titulo.textContent = !lote ? "Cadastrar animal" : parceria ? "Cadastrar lote em parceria" : "Cadastrar lote comum";
+    if (parceria) $("pDataPrevista").min = hoje();
+    if (lote && $("gruposParceria").children.length === 0) adicionarGrupo();
   }
 
   function adicionarGrupo() {
@@ -218,6 +221,7 @@
         nome: $("pLoteNome").value.trim(), tamanho: $("pTamanho").value,
         localizacao: $("pLocalizacao").value.trim(), descricao: $("pDescricao").value.trim()
       },
+      tipo: $("tipoCadastro").value === "comum" ? "comum" : "parceria",
       parceiro: $("pParceiro").value.trim(),
       data_prevista_saida: $("pDataPrevista").value,
       observacoes: $("pObs").value.trim(),
@@ -230,11 +234,11 @@
     };
 
     if (!dados.lote.nome) return mostrar(erro, "Informe o nome do lote.");
-    if (!dados.parceiro) return mostrar(erro, "Informe o nome do fazendeiro parceiro.");
+    if (dados.tipo === "parceria" && !dados.parceiro) return mostrar(erro, "Informe o nome do fazendeiro parceiro.");
     if (dados.grupos.some(g => !(Number(g.quantidade) >= 1) || !g.raca)) {
       return mostrar(erro, "Preencha a quantidade e a raça de todos os grupos.");
     }
-    if (!dados.data_prevista_saida) return mostrar(erro, "Informe a data prevista de saída.");
+    if (dados.tipo === "parceria" && !dados.data_prevista_saida) return mostrar(erro, "Informe a data prevista de saída.");
 
     const botao = form.querySelector('button[type="submit"]');
     botao.disabled = true;
