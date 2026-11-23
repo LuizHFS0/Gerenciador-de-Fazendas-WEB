@@ -33,6 +33,47 @@ SEXOS_PROTOCOLO = ("todos", "Macho", "Fêmea")
 MIN_DIAS_PARTO = 150      # parto antes disso é erro de data (aborto tem registro próprio)
 MAX_GEMEOS = 4
 
+# status do animal controlados pelo ciclo reprodutivo (a lista completa está em api.py: STATUS_ANIMAL)
+STATUS_ATIVO = "Ativo"
+STATUS_PRENHA = "Prenha"
+STATUS_SECA = "Seca"
+
+
+def _trocar_status(cur, animal_id, de, para):
+    """Troca o status só se ele ainda estiver em 'de' (tupla). Status manual de outro tipo nunca é sobrescrito."""
+    marcas = ",".join("?" * len(de))
+    cur.execute(f"UPDATE animais SET status = ? WHERE id = ? AND status IN ({marcas})", (para, animal_id, *de))
+    return cur.rowcount
+
+
+def _aplicar_secagens(cur, hoje, dias_antes):
+    limite = (hoje + timedelta(days=dias_antes)).isoformat()
+    cur.execute("""UPDATE animais SET status = ? WHERE status = ? AND ativo = 1 AND id IN (
+                       SELECT c.vaca_id FROM ciclos_reprodutivos c
+                       WHERE c.status = 'gestante' AND c.data_prevista_parto <= ?)""",
+                (STATUS_SECA, STATUS_PRENHA, limite))
+    return cur.rowcount
+
+
+def sincronizar_status_reprodutivo(conectar, hoje=None):
+    """Passa para Seca as vacas prenhes cujo parto previsto está dentro da antecedência configurada.
+    Só afeta quem está 'Prenha'. Pode rodar quantas vezes for preciso (idempotente)."""
+    hoje = hoje or date.today()
+    conn = conectar()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT valor FROM config_avisos WHERE chave = 'secagem_dias_antes'")
+        linha = cur.fetchone()
+        try:
+            dias = int(linha[0]) if linha else esquema_bezerros.CONFIG_PADRAO["secagem_dias_antes"]
+        except (TypeError, ValueError):
+            dias = esquema_bezerros.CONFIG_PADRAO["secagem_dias_antes"]
+        mudou = _aplicar_secagens(cur, hoje, dias)
+        conn.commit()
+        return mudou
+    finally:
+        conn.close()
+
 # (mínimo, máximo) de cada ajuste de config_avisos
 LIMITES_CONFIG = {
     "aviso_dias_amarelo": (1, 90), "aviso_dias_laranja": (0, 30), "aviso_dias_parto": (1, 90),
@@ -174,7 +215,7 @@ def instalar_rotas_bezerros(app, consultar, executar, conectar, registrar_log):
                 linha.append({"tipo": "previsto_diagnostico", "titulo": "Diagnóstico de gestação",
                               "data": (inicio + timedelta(days=cfg["diagnostico_dias"])).isoformat(),
                               "previsto": True, "detalhe": "Previsto", "responsavel": None})
-            if "secagem" not in feitos and vaca["tipo"] == "Leite":
+            if "secagem" not in feitos:
                 prevista = date.fromisoformat(ciclo["data_prevista_parto"]) - timedelta(days=cfg["secagem_dias_antes"])
                 linha.append({"tipo": "previsto_secagem", "titulo": "Secagem da vaca", "data": prevista.isoformat(),
                               "previsto": True, "detalhe": "Prevista", "responsavel": None})
@@ -195,6 +236,7 @@ def instalar_rotas_bezerros(app, consultar, executar, conectar, registrar_log):
 
     @app.get("/reproducao/{vaca_id}")
     def reproducao_da_vaca(vaca_id: int):
+        sincronizar_status_reprodutivo(conectar)
         vaca = vaca_ou_erro(vaca_id)
         cfg = ler_config()
         ciclos = consultar("SELECT * FROM ciclos_reprodutivos WHERE vaca_id = ? ORDER BY data_cobertura DESC, id DESC",
@@ -306,6 +348,12 @@ def instalar_rotas_bezerros(app, consultar, executar, conectar, registrar_log):
             if novo_status:
                 cur.execute("UPDATE ciclos_reprodutivos SET status = ?, data_encerramento = ? WHERE id = ?",
                             (novo_status, dia.isoformat() if encerra else None, ciclo_id))
+            if tipo == "diagnostico" and resultado == "positivo":
+                _trocar_status(cur, ciclo["vaca_id"], (STATUS_ATIVO,), STATUS_PRENHA)
+            elif (tipo == "diagnostico" and resultado == "negativo") or tipo == "aborto":
+                _trocar_status(cur, ciclo["vaca_id"], (STATUS_PRENHA, STATUS_SECA), STATUS_ATIVO)
+            elif tipo == "secagem":
+                _trocar_status(cur, ciclo["vaca_id"], (STATUS_PRENHA,), STATUS_SECA)
             conn.commit()
         finally:
             conn.close()
@@ -433,6 +481,7 @@ def instalar_rotas_bezerros(app, consultar, executar, conectar, registrar_log):
                              c["observacoes"] or None, animal_id))
             cur.execute("UPDATE ciclos_reprodutivos SET status = 'parida', data_encerramento = ? WHERE id = ?",
                         (dia.isoformat(), ciclo_id))
+            _trocar_status(cur, ciclo["vaca_id"], (STATUS_PRENHA, STATUS_SECA), STATUS_ATIVO)
             conn.commit()
         except HTTPException:
             conn.rollback()
@@ -472,6 +521,7 @@ def instalar_rotas_bezerros(app, consultar, executar, conectar, registrar_log):
     @app.get("/bezerros/alertas")
     def alertas_bezerros():
         cfg, hoje = ler_config(), date.today()
+        sincronizar_status_reprodutivo(conectar, hoje)
         tarefas = []
         for t in consultar("""SELECT t.id, t.animal_id, t.nome, t.data_prevista, a.nome AS animal, a.brinco
                               FROM tarefas_bezerro t JOIN animais a ON a.id = t.animal_id
@@ -491,7 +541,7 @@ def instalar_rotas_bezerros(app, consultar, executar, conectar, registrar_log):
             if "diagnostico" not in eventos:
                 diag = date.fromisoformat(c["data_cobertura"]) + timedelta(days=cfg["diagnostico_dias"])
                 candidatos.append(("diagnostico", "Diagnóstico de gestação", diag.isoformat(), None))
-            if "secagem" not in eventos and c["tipo"] == "Leite":
+            if "secagem" not in eventos:
                 sec = date.fromisoformat(c["data_prevista_parto"]) - timedelta(days=cfg["secagem_dias_antes"])
                 candidatos.append(("secagem", "Secagem da vaca", sec.isoformat(), None))
             for tipo, titulo, data_alvo, janela in candidatos:

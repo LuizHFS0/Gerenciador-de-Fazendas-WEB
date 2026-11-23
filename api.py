@@ -246,6 +246,7 @@ def obterLogsEstoque(limite: int = 5):
 # ---------- Animais ----------
 @app.get("/consultarAnimais")
 def consultar_animais():
+    sincronizar_status_reprodutivo(conectar)
     return {"animais": consultar("""
         SELECT a.id, a.brinco, a.nome, a.tipo, a.sexo, a.raca,
                a.peso_atual, a.data_nascimento, a.status,
@@ -764,7 +765,7 @@ from rotas_parceria import instalar_rotas_parceria
 from autorizacao_parceria import checar_permissao_parceria
 instalar_rotas_parceria(app, consultar, executar, conectar, registrar_log, checar_permissao_parceria)
 
-from rotas_bezerros import instalar_rotas_bezerros
+from rotas_bezerros import instalar_rotas_bezerros, sincronizar_status_reprodutivo
 instalar_rotas_bezerros(app, consultar, executar, conectar, registrar_log)
 
 

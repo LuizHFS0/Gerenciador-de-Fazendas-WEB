@@ -143,4 +143,12 @@ def aplicar(conn):
 
     if conn.execute("SELECT COUNT(*) FROM protocolo_bezerro").fetchone()[0] == 0:
         semear_protocolo(conn)
+
+    # migração única: vacas já gestantes passam a 'Prenha' (depois disso o status é controlado pelos eventos).
+    # Fica numa tabela própria para não ser apagada por "restaurar padrão" dos avisos.
+    conn.execute("CREATE TABLE IF NOT EXISTS controle_migracoes (nome TEXT PRIMARY KEY)")
+    if not conn.execute("SELECT 1 FROM controle_migracoes WHERE nome = 'status_reprodutivo'").fetchone():
+        conn.execute("""UPDATE animais SET status = 'Prenha'
+                        WHERE status = 'Ativo' AND id IN (SELECT vaca_id FROM ciclos_reprodutivos WHERE status = 'gestante')""")
+        conn.execute("INSERT INTO controle_migracoes (nome) VALUES ('status_reprodutivo')")
     conn.commit()
