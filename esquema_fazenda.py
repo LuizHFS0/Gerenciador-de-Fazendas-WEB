@@ -3,6 +3,7 @@
 garantir_esquema() pode rodar quantas vezes for preciso: só cria o que falta.
 """
 
+import esquema_bezerros
 import esquema_parceria
 
 
@@ -235,7 +236,8 @@ COLUNAS_NOVAS = [
 
 
 # 1 = etapa 1 (base) | 2 = fotos e funcionarios.usuario_id | 3 = auditoria e controle de versão | 4 = configurações da fazenda | 5 = baixa de animais
-SCHEMA_VERSAO = 5
+# 6 = módulo de bezerros (ciclos reprodutivos, partos, protocolo e tarefas)
+SCHEMA_VERSAO = 6
 
 
 def garantir_esquema(conn):
@@ -247,6 +249,8 @@ def garantir_esquema(conn):
             conn.execute(f"ALTER TABLE {tabela} ADD COLUMN {coluna} {definicao}")
     # lote em parceria: tabela parceiros e colunas novas (precisa rodar DEPOIS de criar lote e animais)
     esquema_parceria.aplicar(conn)
+    # módulo de bezerros: ciclos reprodutivos, partos, protocolo e tarefas (precisa rodar DEPOIS de criar animais)
+    esquema_bezerros.aplicar(conn)
     conn.execute("""INSERT INTO schema_versao (id, versao, atualizada_em) VALUES (1, ?, datetime('now', 'localtime'))
                     ON CONFLICT(id) DO UPDATE SET versao = excluded.versao, atualizada_em = excluded.atualizada_em""",
                  (SCHEMA_VERSAO,))

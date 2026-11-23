@@ -106,6 +106,38 @@ async function carregarAlertasParceria() {
 
 carregarAlertasParceria();
 
+// bezerros: tarefas de manejo e marcos da gestação (antecedência definida em Configurações > Avisos)
+function situacaoBezerro(dias) {
+  if (dias < 0) return `Atrasada há ${-dias} ${dias === -1 ? "dia" : "dias"}`;
+  if (dias === 0) return "Hoje";
+  return `Em ${dias} ${dias === 1 ? "dia" : "dias"}`;
+}
+
+async function carregarAlertasBezerros() {
+  try {
+    const r = await fetch(`${API}/bezerros/alertas`);
+    if (!r.ok) throw new Error(`Erro ${r.status}`);
+    const dados = await r.json();
+    const urgente = nivel => nivel === "urgente" || nivel === "vencida";
+
+    $("tituloBezerros").textContent = `Bezerros: tarefas de manejo (${dados.tarefas.length})`;
+    desenhar($("corpoBezerros"), dados.tarefas.map(t => [
+      { texto: t.animal, href: `animal.html?id=${t.animal_id}` }, t.nome, formatarData(t.data_prevista),
+      { texto: situacaoBezerro(t.dias_restantes), urgente: urgente(t.nivel) }
+    ]), 4, "Nenhuma tarefa de bezerro chegando.");
+
+    $("tituloGestacao").textContent = `Gestação e parto (${dados.gestacoes.length})`;
+    desenhar($("corpoGestacao"), dados.gestacoes.map(g => [
+      { texto: g.vaca, href: `bezerros.html?id=${g.vaca_id}` }, g.titulo, formatarData(g.data),
+      { texto: situacaoBezerro(g.dias_restantes), urgente: urgente(g.nivel) }
+    ]), 4, "Nenhum marco de gestação chegando.");
+  } catch (erro) {
+    console.error("Falha ao carregar alertas de bezerros:", erro);
+  }
+}
+
+carregarAlertasBezerros();
+
 // o texto acompanha a antecedência escolhida em Configurações
 FW_CONFIG.pronto.then(() => {
   document.getElementById("subAlertas").textContent =

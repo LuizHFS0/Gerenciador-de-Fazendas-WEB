@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Módulo de bezerros</title>
+  <link rel="stylesheet" href="../estilo/style.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">Gerenciador de Fazendas</div>
+    <nav aria-label="Navegação principal" style="display:contents">
+      <ul class="menu">
+        <li><a href="../dashboard.html">Menu principal</a></li>
+        <li><a href="animais.html" class="ativo" aria-current="page">Animais</a></li>
+        <li><a href="maquinas.html">Máquinas</a></li>
+        <li><a href="estoque.html">Estoque</a></li>
+        <li><a href="funcionarios.html">Funcionários</a></li>
+        <li><a href="fazenda.html">Fazenda</a></li>
+        <li><a href="utilitarios.html">Utilitários</a></li>
+      </ul>
+    </nav>
+    <div class="usuario"><span class="avatar" aria-hidden="true">L</span><span>Luiz</span></div>
+  </header>
+
+  <main>
+    <a class="voltar" id="linkVoltar" href="animais.html">Voltar para o animal</a>
+    <h1 id="titulo">Carregando...</h1>
+    <p class="sub" id="sub"></p>
+    <p class="msg-ok" id="msgPagina" role="status" hidden></p>
+    <p class="erro" id="erroPagina" role="alert" hidden></p>
+
+    <section class="secao" id="secCiclo" hidden>
+      <div class="secao-topo">
+        <h2>Ciclo atual</h2>
+        <div class="botoes">
+          <button type="button" id="btnCobertura" hidden>Registrar cobertura</button>
+          <button type="button" id="btnEvento" class="secundario" hidden>Registrar evento</button>
+          <button type="button" id="btnParto" hidden>Registrar parto</button>
+        </div>
+      </div>
+      <div id="conteudoCiclo"></div>
+    </section>
+
+    <section class="secao" id="secLinha" hidden>
+      <div class="secao-topo"><h2>Linha do tempo</h2></div>
+      <ol class="linha-tempo" id="linhaTempo"></ol>
+      <p class="dica" id="dicaLinha" hidden>Os marcos com contorno dourado ainda estão por vir (previstos).</p>
+    </section>
+
+    <section class="secao" id="secCrias" hidden>
+      <div class="secao-topo"><h2>Bezerros desta vaca</h2></div>
+      <div class="tabela-area"><table>
+        <thead><tr><th>Nome</th><th>Brinco</th><th>Sexo</th><th>Nascimento</th><th>Situação</th></tr></thead>
+        <tbody id="corpoCrias"></tbody>
+      </table></div>
+    </section>
+
+    <section class="secao" id="secHistorico" hidden>
+      <div class="secao-topo"><h2>Ciclos anteriores</h2></div>
+      <div id="historico"></div>
+    </section>
+  </main>
+
+  <!-- Cobertura -->
+  <dialog id="modalCobertura">
+    <form id="formCobertura" method="dialog">
+      <h2>Registrar cobertura</h2>
+      <p class="nome-modal"></p>
+      <div class="grade">
+        <div class="campo"><label for="cobTipo">Tipo de cobertura</label>
+          <select id="cobTipo">
+            <option value="monta">Monta natural</option>
+            <option value="ia">Inseminação</option>
+            <option value="repasse">Repasse</option>
+          </select>
+        </div>
+        <div class="campo"><label for="cobData">Data</label><input type="date" id="cobData" required></div>
+        <div class="campo largo"><label for="cobTouroSel">Touro cadastrado no sistema</label>
+          <select id="cobTouroSel"></select>
+        </div>
+        <div class="campo largo"><label for="cobTouroTxt">Ou touro / sêmen não cadastrado</label>
+          <input type="text" id="cobTouroTxt" maxlength="120" placeholder="Ex.: touro do vizinho, sêmen Angus 123">
+        </div>
+        <div class="campo largo"><label for="cobObs">Observações</label><input type="text" id="cobObs" maxlength="500"></div>
+      </div>
+      <p class="dica" id="cobPrevisao"></p>
+      <p class="erro" role="alert" hidden></p>
+      <div class="rodape-modal">
+        <button type="button" class="secundario" data-fechar="modalCobertura">Cancelar</button>
+        <button type="submit">Salvar cobertura</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Evento da linha do tempo -->
+  <dialog id="modalEvento">
+    <form id="formEvento" method="dialog">
+      <h2>Registrar evento</h2>
+      <p class="nome-modal"></p>
+      <div class="grade">
+        <div class="campo"><label for="evTipo">O que aconteceu</label>
+          <select id="evTipo">
+            <option value="diagnostico">Diagnóstico de gestação</option>
+            <option value="secagem">Secagem da vaca</option>
+            <option value="acompanhamento">Acompanhamento (vacina, vermífugo...)</option>
+            <option value="aborto">Aborto</option>
+          </select>
+        </div>
+        <div class="campo"><label for="evData">Data</label><input type="date" id="evData" required></div>
+        <div class="campo largo" id="evResultadoBox"><label for="evResultado">Resultado do diagnóstico</label>
+          <select id="evResultado">
+            <option value="positivo">Positivo (prenha)</option>
+            <option value="negativo">Negativo (vazia)</option>
+            <option value="inconclusivo">Inconclusivo</option>
+          </select>
+        </div>
+        <div class="campo largo" id="evTituloBox" hidden><label for="evTitulo">O que foi feito</label>
+          <select id="evTitulo">
+            <option>Vacina</option><option>Vermífugo</option><option>Mudança de lote</option><option value="__outro">Outro</option>
+          </select>
+        </div>
+        <div class="campo largo" id="evOutroBox" hidden><label for="evOutro">Descreva</label><input type="text" id="evOutro" maxlength="60"></div>
+        <div class="campo largo"><label for="evObs">Observações</label><input type="text" id="evObs" maxlength="500"></div>
+      </div>
+      <p class="dica" id="evAviso" hidden></p>
+      <p class="erro" role="alert" hidden></p>
+      <div class="rodape-modal">
+        <button type="button" class="secundario" data-fechar="modalEvento">Cancelar</button>
+        <button type="submit">Salvar evento</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Parto -->
+  <dialog id="modalParto" style="width:min(720px, calc(100% - 32px))">
+    <form id="formParto" method="dialog">
+      <h2>Registrar parto</h2>
+      <p class="nome-modal"></p>
+      <div class="grade">
+        <div class="campo"><label for="parData">Data do parto</label><input type="date" id="parData" required></div>
+        <div class="campo"><label for="parTipo">Tipo de parto</label>
+          <select id="parTipo"><option value="unico">Único</option><option value="gemeos">Gêmeos</option></select>
+        </div>
+        <div class="campo" id="parQtdBox" hidden><label for="parQtd">Quantos bezerros</label>
+          <select id="parQtd"><option>2</option><option>3</option><option>4</option></select>
+        </div>
+        <div class="campo"><label for="parAssist">Como foi o parto</label>
+          <select id="parAssist">
+            <option value="">Não informar</option><option value="normal">Normal</option>
+            <option value="assistido">Assistido</option><option value="cesarea">Cesárea</option>
+          </select>
+        </div>
+        <div class="campo largo"><label for="parObs">Observações do parto</label><input type="text" id="parObs" maxlength="500"></div>
+      </div>
+      <div id="blocosCrias" style="margin-top:18px"></div>
+      <p class="dica">O bezerro vivo é cadastrado como animal, com a mãe, o pai, o lote e as tarefas de manejo já definidas em Configurações.</p>
+      <p class="erro" role="alert" hidden></p>
+      <div class="rodape-modal">
+        <button type="button" class="secundario" data-fechar="modalParto">Cancelar</button>
+        <button type="submit">Salvar parto</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="../scripts/sessao.js"></script>
+  <script src="../scripts/config-fazenda.js"></script>
+  <script src="../scripts/bezerros.js"></script>
+</body>
+</html>

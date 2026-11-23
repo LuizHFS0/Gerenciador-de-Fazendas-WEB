@@ -259,8 +259,13 @@ def consultar_animais():
 
 @app.get("/consultarAnimal/{animal_id}")
 def consultar_animal(animal_id: int):
-    r = consultar("""SELECT a.*, l.nome AS lote FROM animais a
+    r = consultar("""SELECT a.*, l.nome AS lote,
+                            m.nome AS mae_nome,
+                            COALESCE(p.nome, a.pai_texto) AS pai_nome
+                     FROM animais a
                      LEFT JOIN lote l ON l.id = a.lote_id
+                     LEFT JOIN animais m ON m.id = a.mae_id
+                     LEFT JOIN animais p ON p.id = a.pai_id
                      WHERE a.id = ? AND a.ativo = 1""", (animal_id,))
     if not r:
         raise HTTPException(status_code=404, detail="Animal não encontrado.")
@@ -758,6 +763,9 @@ def excluir_lote(lote_id: int):
 from rotas_parceria import instalar_rotas_parceria
 from autorizacao_parceria import checar_permissao_parceria
 instalar_rotas_parceria(app, consultar, executar, conectar, registrar_log, checar_permissao_parceria)
+
+from rotas_bezerros import instalar_rotas_bezerros
+instalar_rotas_bezerros(app, consultar, executar, conectar, registrar_log)
 
 
 # ---------- Utilitários: backup ----------

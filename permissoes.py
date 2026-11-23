@@ -2,7 +2,8 @@
 
 Perfis: funcionario (1) < gerente (2) < dono (3).
 - Funcionário: consulta, registra e move. Não exclui nada ("excluir" = marcar ativo = 0) e não vê funcionários.
-- Gerente: tudo isso, mais excluir e a área de funcionários. Não gerencia usuários, backup nem dados da fazenda.
+- Gerente: tudo isso, mais excluir, a área de funcionários e a configuração dos avisos (Configurações > Avisos).
+  Não gerencia usuários, backup nem dados da fazenda.
 - Dono: tudo.
 Rota que não está na lista abaixo exige Gerente (falha fechada: rota nova não vaza para o Funcionário).
 """
@@ -43,6 +44,12 @@ POLITICA = [
     _regra("DELETE", r"^/(excluirAnimal|excluirMaquina|excluirItem|excluirLote)/\d+$", "gerente"),
     _regra("POST", r"^/baixaAnimal/\d+$", "gerente"),
     _regra("PUT", r"^/editarLote/\d+$", "gerente"),
+    # módulo de bezerros: consultar, registrar evento e concluir tarefa = qualquer usuário logado;
+    # cobertura, parto e dispensar tarefa = Gerente ou Dono; configuração dos avisos = Gerente ou Dono
+    _regra("GET", r"^/(touros|reproducao/\d+|bezerros/alertas|bezerros/tarefas/\d+)$", "funcionario"),
+    _regra("POST", r"^/(ciclos/\d+/eventos|tarefasBezerro/\d+/concluir)$", "funcionario"),
+    _regra("POST", r"^/(reproducao/\d+/cobertura|ciclos/\d+/parto|tarefasBezerro/\d+/dispensar)$", "gerente"),
+    _regra("GET POST PUT DELETE", r"^/api/avisos(/.*)?$", "gerente"),
     # dia a dia: qualquer usuário logado
     _regra("GET", r"^/(dashboard|movimentacoesDashboard|obterLogsEstoque|consultarAnimais|consultarAnimal/\d+|pesagens/\d+|vacinas/\d+"
                   r"|consultarLotes|consultarMaquinas|consultarMaquina/\d+|manutencoes/\d+|consultarEstoque"
@@ -56,7 +63,7 @@ POLITICA = [
 ]
 
 # páginas restritas (pelo nome do arquivo)
-PAGINAS = {"fazenda.html": "dono", "configuracoes.html": "dono", "usuarios.html": "dono", "funcionarios.html": "gerente", "funcionario.html": "gerente"}
+PAGINAS = {"fazenda.html": "dono", "configuracoes.html": "gerente", "usuarios.html": "dono", "funcionarios.html": "gerente", "funcionario.html": "gerente"}
 
 
 def permitido(nivel, metodo, caminho):

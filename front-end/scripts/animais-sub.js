@@ -64,16 +64,27 @@ async function carregarAnimal() {
     ["Raça", animal.raca || "-"], ["Peso atual", formatarPeso(animal.peso_atual)],
     ["Data de nascimento", formatarData(animal.data_nascimento)],
     ["Status", animal.status], ["Lote", animal.lote || "-"],
-    ["Origem", animal.origem || "-"], ["Observações", animal.observacoes || "-"]
+    ["Origem", animal.origem || "-"]
   ];
+  if (animal.mae_nome) campos.push(["Mãe", animal.mae_nome, `animal.html?id=${animal.mae_id}`]);
+  if (animal.pai_nome) campos.push(["Pai", animal.pai_nome, animal.pai_id ? `animal.html?id=${animal.pai_id}` : null]);
+  campos.push(["Observações", animal.observacoes || "-"]);
   $("dadosAnimal").innerHTML = "";
-  campos.forEach(([rotulo, valor]) => {
+  campos.forEach(([rotulo, valor, href]) => {
     const dt = document.createElement("dt");
     const dd = document.createElement("dd");
     dt.textContent = rotulo;
-    dd.textContent = valor;
+    if (href) {
+      const link = document.createElement("a");
+      link.href = href;
+      link.textContent = valor;
+      dd.appendChild(link);
+    } else {
+      dd.textContent = valor;
+    }
     $("dadosAnimal").append(dt, dd);
   });
+  $("btnBezerros").hidden = animal.sexo !== "Fêmea";     // só vaca tem módulo de bezerros
 }
 
 async function carregarPesagens() {
@@ -193,6 +204,122 @@ $("formVacina").addEventListener("submit", async e => {
   } catch (erro) { mostrarErro($("modalVacina"), erro.message); }
 });
 
+// ---------- Tarefas do bezerro (avisos de manejo) ----------
+let podeGerenciar = false;      // Gerente ou Dono pode dispensar tarefas (o servidor confere de novo)
+let tarefaAtual = null;
+
+function hojeIso() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 10);
+}
+
+function seloDaTarefa(t) {
+  const selo = document.createElement("span");
+  selo.className = "selo";
+  if (t.status === "feita") { selo.classList.add("feita"); selo.textContent = `Feita em ${formatarData(t.data_realizada)}`; }
+  else if (t.status === "dispensada") { selo.classList.add("dispensada"); selo.textContent = "Dispensada"; }
+  else {
+    const d = t.dias_restantes;
+    if (t.nivel) selo.classList.add(t.nivel);
+    selo.textContent = d < 0 ? `Atrasada há ${-d} ${d === -1 ? "dia" : "dias"}` : d === 0 ? "Hoje" : d === 1 ? "Amanhã" : `Em ${d} dias`;
+  }
+  return selo;
+}
+
+function abrirTarefa(t) {
+  tarefaAtual = t;
+  $("formTarefa").reset();
+  $("tarefaTitulo").textContent = `Concluir: ${t.nome}`;
+  $("tarData").value = hojeIso();
+  $("tarData").max = hojeIso();
+  $("tarPesoBox").hidden = t.tipo !== "pesagem";
+  $("tarefaOrientacao").hidden = !t.orientacao;
+  $("tarefaOrientacao").textContent = t.orientacao || "";
+  abrir($("modalTarefa"));
+}
+
+function abrirDispensa(t) {
+  tarefaAtual = t;
+  $("formDispensa").reset();
+  abrir($("modalDispensa"));
+}
+
+async function carregarTarefas() {
+  try {
+    const { tarefas } = await api(`/bezerros/tarefas/${id}`);
+    $("secTarefas").hidden = tarefas.length === 0;
+    const corpo = $("corpoTarefas");
+    corpo.innerHTML = "";
+    tarefas.forEach(t => {
+      const tr = document.createElement("tr");
+      const tdNome = document.createElement("td");
+      tdNome.textContent = t.nome;
+      if (t.orientacao) tdNome.title = t.orientacao;
+      const tdData = document.createElement("td");
+      tdData.textContent = formatarData(t.data_prevista);
+      const tdSelo = document.createElement("td");
+      tdSelo.appendChild(seloDaTarefa(t));
+      const tdAcoes = document.createElement("td");
+      if (t.status === "pendente") {
+        tdAcoes.className = "botoes";
+        const concluir = document.createElement("button");
+        concluir.type = "button";
+        concluir.textContent = "Concluir";
+        concluir.addEventListener("click", () => abrirTarefa(t));
+        tdAcoes.appendChild(concluir);
+        if (podeGerenciar) {
+          const dispensar = document.createElement("button");
+          dispensar.type = "button";
+          dispensar.className = "secundario";
+          dispensar.textContent = "Dispensar";
+          dispensar.addEventListener("click", () => abrirDispensa(t));
+          tdAcoes.appendChild(dispensar);
+        }
+      }
+      tr.append(tdNome, tdData, tdSelo, tdAcoes);
+      corpo.appendChild(tr);
+    });
+  } catch (erro) { console.error(erro); }
+}
+
+function avisoTarefas(texto) {
+  $("msgTarefas").textContent = texto;
+  $("msgTarefas").hidden = false;
+  setTimeout(() => { $("msgTarefas").hidden = true; }, 6000);
+}
+
+$("formTarefa").addEventListener("submit", async e => {
+  e.preventDefault();
+  const corpo = { data: $("tarData").value, observacoes: $("tarObs").value.trim() };
+  if (tarefaAtual.tipo === "pesagem" && $("tarPeso").value !== "") corpo.peso = Number($("tarPeso").value);
+  try {
+    const r = await api(`/tarefasBezerro/${tarefaAtual.id}/concluir`, { method: "POST", body: JSON.stringify(corpo) });
+    $("modalTarefa").close();
+    avisoTarefas(r.proxima ? `Tarefa concluída. A próxima ficou para ${formatarData(r.proxima)}.` : "Tarefa concluída.");
+    carregarTarefas();
+    carregarAnimal();                                   // o peso atual pode ter mudado
+    if (tarefaAtual.tipo === "vacina") carregarVacinas();
+    if (tarefaAtual.tipo === "pesagem") carregarPesagens();
+  } catch (erro) { mostrarErro($("modalTarefa"), erro.message); }
+});
+
+$("formDispensa").addEventListener("submit", async e => {
+  e.preventDefault();
+  try {
+    await api(`/tarefasBezerro/${tarefaAtual.id}/dispensar`, { method: "POST", body: JSON.stringify({ observacoes: $("dispObs").value.trim() }) });
+    $("modalDispensa").close();
+    avisoTarefas("Tarefa dispensada.");
+    carregarTarefas();
+  } catch (erro) { mostrarErro($("modalDispensa"), erro.message); }
+});
+
+$("btnBezerros").addEventListener("click", () => { location.href = `bezerros.html?id=${id}`; });
+
 carregarAnimal();
 carregarPesagens();
 carregarVacinas();
+(async () => {
+  try { podeGerenciar = (await api("/api/perfil")).pode_excluir === true; } catch (_) { podeGerenciar = false; }
+  carregarTarefas();
+})();

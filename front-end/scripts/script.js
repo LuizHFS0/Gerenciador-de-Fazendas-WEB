@@ -138,6 +138,15 @@ async function carregarAlertas() {
       if (r2.ok) saidas = (await r2.json()).alertas;
     } catch (_) { /* sem alerta de parceria: o resto da tela segue normal */ }
 
+    // bezerros: tarefas de manejo e marcos da gestação (antecedência definida em Configurações > Avisos)
+    let bezerros = { tarefas: [], gestacoes: [] };
+    try {
+      const r3 = await fetch("/bezerros/alertas");
+      if (r3.ok) bezerros = await r3.json();
+    } catch (_) { /* sem aviso de bezerros: o resto da tela segue normal */ }
+    const detalheDias = d => d < 0 ? `atrasada há ${-d} ${d === -1 ? "dia" : "dias"}` : d === 0 ? "hoje" : `em ${d} ${d === 1 ? "dia" : "dias"}`;
+    const urgenteNivel = nivel => nivel === "urgente" || nivel === "vencida";
+
     const grupos = [
       { ligado: cfg.notif_vacinas, titulo: "Vacinas chegando", vazio: "Nenhuma vacina próxima.",
         itens: dados.vacinas.map(v => ({ texto: `${v.animal} · ${v.vacina}`, href: `./paginas/animal.html?id=${v.animal_id}`, ...situacao(v.proxima_dose) })) },
@@ -156,6 +165,19 @@ async function carregarAlertas() {
         detalhe: a.dias_restantes < 0 ? `saída vencida há ${-a.dias_restantes} ${a.dias_restantes === -1 ? "dia" : "dias"}`
                : a.dias_restantes === 0 ? "sai hoje"
                : `sai em ${a.dias_restantes} ${a.dias_restantes === 1 ? "dia" : "dias"}`
+      })) });
+    }
+
+    if (bezerros.tarefas.length > 0) {
+      grupos.push({ titulo: "Bezerros: tarefas de manejo", vazio: "", itens: bezerros.tarefas.map(t => ({
+        texto: `${t.animal} · ${t.nome}`, href: `./paginas/animal.html?id=${t.animal_id}`,
+        urgente: urgenteNivel(t.nivel), detalhe: detalheDias(t.dias_restantes)
+      })) });
+    }
+    if (bezerros.gestacoes.length > 0) {
+      grupos.push({ titulo: "Gestação e parto", vazio: "", itens: bezerros.gestacoes.map(g => ({
+        texto: `${g.vaca} · ${g.titulo}`, href: `./paginas/bezerros.html?id=${g.vaca_id}`,
+        urgente: urgenteNivel(g.nivel), detalhe: detalheDias(g.dias_restantes)
       })) });
     }
 

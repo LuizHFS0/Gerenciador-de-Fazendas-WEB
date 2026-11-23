@@ -24,9 +24,15 @@
   </header>
 
   <main>
-    <h1>Configurações da fazenda</h1>
-    <p class="sub">Dados principais, unidades e preferências num só lugar. <a href="utilitarios.html">Voltar aos utilitários</a></p>
+    <h1>Configurações</h1>
+    <p class="sub" id="subConfig">Dados da fazenda, unidades, preferências e avisos num só lugar. <a href="utilitarios.html">Voltar aos utilitários</a></p>
 
+    <div class="abas" role="tablist" aria-label="Módulos de configuração">
+      <button type="button" role="tab" id="abaFazenda" aria-selected="true" aria-controls="painelFazenda">Fazenda</button>
+      <button type="button" role="tab" id="abaAvisos" aria-selected="false" aria-controls="painelAvisos" tabindex="-1">Avisos</button>
+    </div>
+
+    <div id="painelFazenda" role="tabpanel" aria-labelledby="abaFazenda">
     <form id="formConfig" novalidate>
       <section class="secao" aria-labelledby="hDados">
         <div class="secao-topo"><h2 id="hDados">Dados da fazenda</h2></div>
@@ -108,9 +114,79 @@
         <span class="erro" id="msgErro" role="alert" hidden style="margin:0"></span>
       </div>
     </form>
+    </div>
+
+    <div id="painelAvisos" role="tabpanel" aria-labelledby="abaAvisos" hidden>
+      <p class="aviso-escopo">Neste módulo você define quando o sistema avisa. <strong>No momento, ele cuida dos avisos dos bezerros.</strong> Novos avisos serão adicionados aqui no futuro.</p>
+
+      <section class="secao" aria-labelledby="hBezerros">
+        <div class="secao-topo"><h2 id="hBezerros">Bezerros</h2></div>
+
+        <h3 style="margin:0 0 12px">Quando avisar</h3>
+        <form id="formAvisos" novalidate>
+          <div class="grade">
+            <div class="campo"><label for="av_amarelo">Aviso amarelo: faltando até (dias)</label><input type="number" id="av_amarelo" min="1" max="90" step="1"></div>
+            <div class="campo"><label for="av_laranja">Aviso laranja: faltando até (dias)</label><input type="number" id="av_laranja" min="0" max="30" step="1"></div>
+            <div class="campo"><label for="av_parto">Aviso do parto: começar (dias antes)</label><input type="number" id="av_parto" min="1" max="90" step="1"></div>
+            <div class="campo"><label for="av_gestacao">Duração da gestação (dias)</label><input type="number" id="av_gestacao" min="200" max="320" step="1"></div>
+            <div class="campo"><label for="av_diagnostico">Lembrar do diagnóstico após a cobertura (dias)</label><input type="number" id="av_diagnostico" min="20" max="120" step="1"></div>
+            <div class="campo"><label for="av_secagem">Lembrar da secagem antes do parto (dias)</label><input type="number" id="av_secagem" min="30" max="90" step="1"></div>
+          </div>
+          <p class="dica">Tarefa vencida aparece sempre em vermelho. A secagem vale só para vacas de leite.</p>
+          <div class="rodape-config">
+            <button type="submit" id="btnSalvarAvisos">Salvar avisos</button>
+            <span class="msg-ok" id="msgAvisosOk" role="status" hidden></span>
+            <span class="erro" id="msgAvisosErro" role="alert" hidden style="margin:0"></span>
+          </div>
+        </form>
+
+        <h3 style="margin:32px 0 4px">Tarefas de manejo do bezerro</h3>
+        <p class="dica" style="margin-top:0">Cada bezerro que nasce recebe estas tarefas, com a data contada a partir do nascimento. As mudanças valem para os próximos bezerros.</p>
+        <div class="tabela-area alta"><table class="tabela-protocolo">
+          <thead><tr><th>Tarefa</th><th>Quando</th><th>Repete</th><th>Vale para</th><th>Situação</th><th></th></tr></thead>
+          <tbody id="corpoProtocolo"></tbody>
+        </table></div>
+        <div class="barra-protocolo">
+          <button type="button" id="btnNovaTarefa">Adicionar tarefa</button>
+          <button type="button" id="btnAplicarAtuais" class="secundario">Aplicar aos bezerros atuais</button>
+          <button type="button" id="btnRestaurar" class="secundario">Restaurar padrão</button>
+        </div>
+        <p class="msg-ok" id="msgProtocoloOk" role="status" hidden style="margin-top:12px"></p>
+        <p class="erro" id="msgProtocoloErro" role="alert" hidden></p>
+      </section>
+    </div>
   </main>
+
+  <dialog id="modalTarefaProtocolo">
+    <form id="formTarefaProtocolo" method="dialog">
+      <h2 id="tpTitulo">Tarefa do protocolo</h2>
+      <div class="grade">
+        <div class="campo largo"><label for="tpNome">Nome da tarefa</label><input type="text" id="tpNome" maxlength="80" required></div>
+        <div class="campo"><label for="tpDias">Fazer com quantos dias de vida</label><input type="number" id="tpDias" min="0" max="1500" step="1" required></div>
+        <div class="campo"><label for="tpSexo">Vale para</label>
+          <select id="tpSexo"><option value="todos">Todos os bezerros</option><option value="Fêmea">Só fêmeas</option><option value="Macho">Só machos</option></select>
+        </div>
+        <div class="campo"><label for="tpRepetir">Repetir a cada (dias)</label><input type="number" id="tpRepetir" min="1" max="365" step="1" placeholder="Não repete"></div>
+        <div class="campo"><label for="tpAte">Repetir até os (dias de vida)</label><input type="number" id="tpAte" min="1" max="1500" step="1" placeholder="Sem limite"></div>
+        <div class="campo"><label for="tpTipo">O que acontece ao concluir</label>
+          <select id="tpTipo">
+            <option value="geral">Só marca como feita</option>
+            <option value="vacina">Registra uma vacina no animal</option>
+            <option value="pesagem">Pode registrar o peso</option>
+          </select>
+        </div>
+        <div class="campo largo"><label for="tpOrient">Orientação (aparece para quem for fazer)</label><input type="text" id="tpOrient" maxlength="200"></div>
+      </div>
+      <p class="erro" role="alert" hidden></p>
+      <div class="rodape-modal">
+        <button type="button" class="secundario" data-fechar-tp>Cancelar</button>
+        <button type="submit">Salvar tarefa</button>
+      </div>
+    </form>
+  </dialog>
 
   <script src="../scripts/sessao.js"></script>
   <script src="../scripts/configuracoes.js"></script>
+  <script src="../scripts/configuracoes-avisos.js"></script>
 </body>
 </html>

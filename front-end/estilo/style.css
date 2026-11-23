@@ -877,3 +877,150 @@ button.perigo:hover {
   display: inline-block;
   margin-top: 6px;
 }
+
+
+/* ==========================================================================
+   MÓDULO DE BEZERROS, ABAS DE CONFIGURAÇÕES E SELOS DE SITUAÇÃO
+   ========================================================================== */
+
+[hidden] { display: none !important; }
+
+/* abas (Configurações: Fazenda | Avisos) */
+.abas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 24px;
+  border-bottom: 1px solid var(--linha);
+}
+
+.abas button {
+  background: transparent;
+  color: var(--suave);
+  border-radius: calc(var(--raio) - 2px) calc(var(--raio) - 2px) 0 0;
+  border-bottom: 3px solid transparent;
+  padding: 10px 20px;
+}
+
+.abas button:hover { background: var(--campo-suave); color: var(--campo); }
+
+.abas button[aria-selected="true"] {
+  color: var(--campo);
+  border-bottom-color: var(--campo);
+}
+
+/* selos de situação: amarelo = chegando, laranja = urgente, vermelho = vencida */
+.selo {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.775rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--campo-suave);
+  color: var(--campo);
+}
+
+.selo.aviso     { background: #fff4d6; color: #5b4310; }
+.selo.urgente   { background: #ffe6cc; color: #7a3d05; }
+.selo.vencida   { background: var(--alerta-fundo); color: var(--alerta); }
+.selo.feita     { background: #e3f1e4; color: var(--sucesso); }
+.selo.dispensada{ background: #eceff1; color: var(--suave); }
+.selo.previsto  { background: transparent; color: var(--terra); box-shadow: inset 0 0 0 1px var(--dourado); }
+
+/* resumo do ciclo atual */
+.resumo-ciclo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.resumo-ciclo > div {
+  background: var(--palha);
+  border-radius: calc(var(--raio) - 2px);
+  padding: 12px 14px;
+}
+
+.resumo-ciclo small { display: block; color: var(--suave); font-size: 0.78rem; margin-bottom: 2px; }
+.resumo-ciclo strong { font-size: 1rem; }
+
+/* linha do tempo vertical */
+.linha-tempo {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 10px;
+  border-left: 2px solid var(--linha);
+}
+
+.linha-tempo li {
+  position: relative;
+  padding: 0 0 20px 24px;
+}
+
+.linha-tempo li:last-child { padding-bottom: 0; }
+
+.linha-tempo li::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--campo);
+  border: 3px solid var(--papel);
+  box-shadow: 0 0 0 1px var(--campo);
+}
+
+.linha-tempo li.previsto::before { background: var(--papel); box-shadow: 0 0 0 2px var(--dourado); }
+.linha-tempo li.previsto .titulo { color: var(--suave); }
+.linha-tempo .titulo { font-weight: 700; }
+.linha-tempo .quando { font-size: 0.82rem; color: var(--suave); margin-left: 8px; }
+.linha-tempo .detalhe { display: block; font-size: 0.9rem; color: var(--suave); margin-top: 2px; }
+
+/* parto: um bloco por bezerro */
+.bloco-cria {
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  padding: 16px;
+  margin-bottom: 14px;
+  background: var(--fundo);
+}
+
+.bloco-cria h3 { margin: 0 0 12px; font-size: 0.95rem; }
+.bloco-cria .campo.largo { grid-column: 1 / -1; }
+
+/* histórico de ciclos */
+details.ciclo-antigo {
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  padding: 12px 16px;
+  margin-bottom: 10px;
+}
+
+details.ciclo-antigo summary { cursor: pointer; font-weight: 600; }
+details.ciclo-antigo[open] summary { margin-bottom: 14px; }
+
+/* configuração dos avisos */
+.aviso-escopo {
+  background: var(--palha);
+  border-left: 4px solid var(--dourado);
+  border-radius: calc(var(--raio) - 2px);
+  padding: 12px 16px;
+  margin: 0 0 24px;
+  color: var(--texto);
+}
+
+.tabela-protocolo td, .tabela-protocolo th { vertical-align: middle; }
+.tabela-protocolo tr.desligada td { color: var(--suave); }
+.tabela-protocolo .acoes-linha { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.tabela-protocolo button { padding: 6px 12px; font-size: 0.82rem; }
+.barra-protocolo { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+
+/* listas mais longas (tarefas do bezerro, protocolo) mostram mais linhas antes de rolar */
+.secao .tabela-area.alta { max-height: 560px; }
+
+dd a { color: var(--campo); font-weight: 600; text-decoration: none; }
+dd a:hover { text-decoration: underline; }

@@ -123,7 +123,40 @@ $("nome_fazenda").addEventListener("input", () => {                      // sem 
   if ($("btnRemoverLogo").hidden) $("logoPrevia").textContent = ($("nome_fazenda").value.trim().charAt(0) || "?").toUpperCase();
 });
 
+// ---------- abas: Fazenda | Avisos ----------
+const ABAS = { fazenda: ["abaFazenda", "painelFazenda"], avisos: ["abaAvisos", "painelAvisos"] };
+
+function selecionarAba(nome) {
+  Object.entries(ABAS).forEach(([chave, [aba, painel]]) => {
+    const ativa = chave === nome;
+    $(aba).setAttribute("aria-selected", String(ativa));
+    $(aba).tabIndex = ativa ? 0 : -1;
+    $(painel).hidden = !ativa;
+  });
+}
+
+Object.entries(ABAS).forEach(([chave, [aba]]) => {
+  $(aba).addEventListener("click", () => selecionarAba(chave));
+  $(aba).addEventListener("keydown", e => {                      // setas trocam de aba, como em qualquer lista de abas
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    const visiveis = Object.keys(ABAS).filter(k => !$(ABAS[k][0]).hidden);
+    const destino = visiveis[(visiveis.indexOf(chave) + (e.key === "ArrowRight" ? 1 : visiveis.length - 1)) % visiveis.length];
+    selecionarAba(destino);
+    $(ABAS[destino][0]).focus();
+  });
+});
+
+// O módulo Fazenda é só do Dono (o servidor também recusa para os outros perfis). O Gerente vê só o módulo Avisos.
 (async () => {
+  let nivel = "dono";
+  try { nivel = (await api("/api/perfil")).nivel; } catch (_) { /* sem perfil: o servidor decide o que responder */ }
+  if (nivel !== "dono") {
+    $("abaFazenda").hidden = true;
+    $("painelFazenda").hidden = true;
+    selecionarAba("avisos");
+    $("subConfig").innerHTML = 'Os avisos do sistema. <a href="utilitarios.html">Voltar aos utilitários</a>';
+    return;
+  }
   try { preencher(await api("/api/configuracoes")); }
   catch (erro) { mostrar($("msgErro"), "Não foi possível carregar as configurações: " + erro.message); }
 })();
